@@ -1,20 +1,30 @@
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native';
+import Home from './Pages/Home';
+import Graph from './Pages/Graph';
+import Trade from './Pages/Trade';
 
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState('home');
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'home':
+        return <Home onNavigate={setCurrentScreen} />;
+      case 'graph':
+        return <Graph onNavigate={setCurrentScreen} />;
+      case 'trade':
+        return <Trade onNavigate={setCurrentScreen} />;
+      default:
+        return <Home onNavigate={setCurrentScreen} />;
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0D0F13' }}>
+      {renderScreen()}
+      <StatusBar style="light" />
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
