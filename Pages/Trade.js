@@ -1,70 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Dimensions
+} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialIcons } from '@expo/vector-icons';
+import TradeIcon from '../assets/TradeIcon';
 
 const TradeScreen = ({ onNavigate }) => {
   const handleTradePress = (symbol) => {
-    // Navigate to Performance screen with the selected symbol
     onNavigate && onNavigate('graph', { symbol });
   };
 
-  const renderTradeItem = ({
-    id,
-    containerStyle,
-    title,
-    subtitle,
-    price,
-    change,
-    changeColor,
-    icon,
-    iconType = 'icon', // 'icon' or 'image'
-    additionalContent
-  }) => (
-    <View style={containerStyle} key={id}>
-      <TouchableOpacity 
-        style={styles.tradeItem} 
-        onPress={() => handleTradePress(title)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.tradeItemContent}>
-          <View style={styles.iconCircle}>
-            {iconType === 'image' ? (
-              <Image 
-                source={icon} 
-                style={styles.assetIcon} 
-                resizeMode="contain" 
-              />
-            ) : (
-              <MaterialCommunityIcons 
-                name={icon} 
-                size={24} 
-                color="#fff" 
-              />
-            )}
-          </View>
-          <View style={styles.assetInfo}>
-            <View style={styles.assetHeader}>
-              <Text style={styles.assetTitle}>{title}</Text>
-              <View style={styles.priceSection}>
-                <Text style={styles.assetPrice}>{price}</Text>
-                <Text style={[styles.assetChange, { color: changeColor || '#888' }]}>
-                  {change}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.assetSubtitle} numberOfLines={1}>
-              {subtitle}
-            </Text>
-            {additionalContent}
-          </View>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.contentContainer}>
+    <View style={{ flex: 1 }}>
+      {/* Scrollable content */}
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Balance */}
         <View style={styles.balanceContainer}>
           <View style={styles.balanceBox}>
@@ -72,7 +29,7 @@ const TradeScreen = ({ onNavigate }) => {
               <Text style={styles.demoText}>Demo</Text>
             </View>
             <Text style={styles.balanceAmount}>500.00 USD</Text>
-            <MaterialCommunityIcons name="dots-vertical" size={18} color="#999" fontWeight="bold"/>
+            <MaterialCommunityIcons name="dots-vertical" size={18} color="#999" />
           </View>
         </View>
 
@@ -110,102 +67,425 @@ const TradeScreen = ({ onNavigate }) => {
             <MaterialCommunityIcons name="square-edit-outline" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
-
-        {/* Individual Trade Containers */}
-        {renderTradeItem({
-          id: 'btc',
-          containerStyle: styles.tradeContainer1,
-          title: 'BTC',
-          subtitle: 'Bitcoin vs US Dollar',
-          price: '117,901.93',
-          change: '-1.31%',
-          changeColor: '#FF5B5A',
-          icon: require('../assets/btc.png'),
-          iconType: 'image',
-        })}
-
-        {renderTradeItem({
-          id: 'xau',
-          containerStyle: styles.tradeContainer2,
-          title: 'XAU/USD',
-          subtitle: 'Gold vs US Dollar',
-          price: '3,309.89',
-          change: '-0.71%',
-          changeColor: '#FF5B5A',
-          icon: 'gold',
-        })}
-
-        {renderTradeItem({
-          id: 'aapl',
-          containerStyle: styles.tradeContainer3,
-          title: 'AAPL',
-          subtitle: 'Apple Inc.',
-          price: '213.78',
-          change: '-0.27%',
-          changeColor: '#FF5B5A',
-          icon: 'apple',
-        })}
-
-        {renderTradeItem({
-          id: 'eurusd',
-          containerStyle: styles.tradeContainer4,
-          title: 'EUR/USD',
-          subtitle: 'Euro vs US Dollar',
-          price: '1.15939',
-          change: '-1.37%',
-          changeColor: '#FF5B5A',
-          icon: 'currency-eur',
-        })}
-
-        {renderTradeItem({
-          id: 'gbpusd',
-          containerStyle: styles.tradeContainer5,
-          title: 'GBP/USD',
-          subtitle: 'Great Britain Pound vs US Dollar',
-          price: '1.33682',
-          change: '-0.52%',
-          changeColor: '#FF5B5A',
-          icon: 'currency-gbp',
-        })}
-
-        {renderTradeItem({
-          id: 'usdjpy',
-          containerStyle: styles.tradeContainer6,
-          title: 'USD/JPY',
-          subtitle: 'US Dollar vs Japanese Yen',
-          price: '148.486',
-          change: '0.0%',
-          changeColor: '#888',
-          icon: 'currency-jpy',
-        })}
-
-        {/* Footer Navigation */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={[styles.footerButton, styles.footerButtonActive]}>
-            <MaterialCommunityIcons name="view-grid" size={24} color="#fff" />
-            <Text style={[styles.footerText, styles.footerTextActive]}>Accounts</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.footerButton}>
-            <MaterialCommunityIcons name="chart-candlestick" size={24} color="#fff" />
-            <Text style={styles.footerTextActive}>Trade</Text>
-          </TouchableOpacity>
+        {/* Bitcoin Trade Container #1 */}
+        <View style={styles.tradeContainer1}>
           <TouchableOpacity 
-            style={styles.footerButton}
-            onPress={() => onNavigate && onNavigate('graph')}
+            style={styles.tradeItem} 
+            onPress={() => handleTradePress('BTC')}
+            activeOpacity={0.7}
           >
-            <MaterialCommunityIcons name="chart-bar" size={24} color="#888" />
-            <Text style={styles.footerText}>Performance</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.footerButton}>
-            <MaterialCommunityIcons name="account-circle-outline" size={24} color="#888" />
-            <Text style={styles.footerText}>Profile</Text>
-          </TouchableOpacity>
+      {/* Main Container */}
+    <View style={styles.tradeItemContent}>
+      {/* First Row: Icon + Title + Price Info */}
+      <View style={styles.topRowContainer}>
+        
+        {/* Icon + BTC Title Container */}
+        <View style={styles.iconTitleContainer}>
+          <View style={styles.iconCircle}>
+            <Image 
+              source={require('../assets/btc.png')} 
+              style={styles.assetIcon} 
+              resizeMode="contain" 
+            />
+          </View>
+          <Text style={styles.assetTitle}>BTC</Text>
         </View>
-      </ScrollView>
+        
+        {/* Price + Change Container */}
+        <View style={styles.priceChangeContainer}>
+          <Text style={styles.assetPrice}>117,901.93</Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
+            -1.31%
+          </Text>
+        </View>
+      </View>
+      
+      {/* Second Row: Subtitle */}
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.assetSubtitle} numberOfLines={1}>
+          Bitcoin vs US Dollar
+        </Text>
+      </View>
+      </View>
+      </TouchableOpacity>
     </View>
-  );
-};
 
+    {/* Bitcoin Trade Container #2 */}
+<View style={styles.tradeContainer1}>
+  <TouchableOpacity 
+    style={styles.tradeItem} 
+    onPress={() => handleTradePress('BTC')}
+    activeOpacity={0.7}
+  >
+    {/* Main Container */}
+    <View style={styles.tradeItemContent}>
+      
+      {/* First Row: Icon + Title + Price Info */}
+      <View style={styles.topRowContainer}>
+        
+        {/* Icon + BTC Title Container */}
+        <View style={styles.iconTitleContainer}>
+          <View style={styles.iconCircle}>
+            {/* Overlapping gold and USD icons with circular style */}
+            <View style={{ position: 'relative', width: 30, height: 30 }}>
+              <Image 
+                source={require('../assets/gold.png')} 
+                style={{
+                  width: 24,
+                  height: 24,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  borderRadius: 12, // Makes it a circle
+                  zIndex: 1
+                }}
+                resizeMode="cover" // Ensures full cover in circle
+              />
+              <Image 
+                source={require('../assets/usd.png')} 
+                style={{
+                  width: 24,
+                  height: 24,
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  borderRadius: 12, // Makes it a circle
+                  zIndex: 2
+                }}
+                resizeMode="cover"
+              />
+            </View>
+          </View>
+
+          <Text style={styles.assetTitle}>XAU/USD</Text>
+        </View>
+        
+        {/* Price + Change Container */}
+        <View style={styles.priceChangeContainer}>
+          <Text style={styles.assetPrice}>3309.893</Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
+            -0.71%
+          </Text>
+        </View>
+      </View>
+      
+      {/* Second Row: Subtitle */}
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.assetSubtitle} numberOfLines={1}>
+          Gold vs US Dollar
+        </Text>
+      </View>
+      
+    </View>
+  </TouchableOpacity>
+</View>
+
+
+    {/* Bitcoin Trade Container #3 */}
+<View style={styles.tradeContainer1}>
+  <TouchableOpacity 
+    style={styles.tradeItem} 
+    onPress={() => handleTradePress('BTC')}
+    activeOpacity={0.7}
+  >
+    {/* Main Container */}
+    <View style={styles.tradeItemContent}>
+      
+      {/* First Row: Icon + Title + Price Info */}
+      <View style={styles.topRowContainer}>
+        
+        {/* Icon + BTC Title Container */}
+        <View style={styles.iconTitleContainer}>
+          {/* Circle Icon Wrapper */}
+          <View style={{
+            width: 32,
+            height: 32,
+            borderRadius: 15,
+            overflow: 'hidden',
+            marginRight: 10,
+          }}>
+            <Image 
+              source={require('../assets/aapl.png')} 
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+              resizeMode="cover" // Ensures no white space
+            />
+          </View>
+          <Text style={styles.assetTitle}>AAPL</Text>
+        </View>
+        
+        {/* Price + Change Container */}
+        <View style={styles.priceChangeContainer}>
+          <Text style={styles.assetPrice}>117,901.93</Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
+            -1.31%
+          </Text>
+        </View>
+      </View>
+      
+      {/* Second Row: Subtitle */}
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.assetSubtitle} numberOfLines={1}>
+          Apple INC
+        </Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+</View>
+
+
+    {/* Bitcoin Trade Container #4 */}
+<View style={styles.tradeContainer1}>
+  <TouchableOpacity 
+    style={styles.tradeItem} 
+    onPress={() => handleTradePress('BTC')}
+    activeOpacity={0.7}
+  >
+    {/* Main Container */}
+    <View style={styles.tradeItemContent}>
+      
+      {/* First Row: Icon + Title + Price Info */}
+      <View style={styles.topRowContainer}>
+        
+        {/* Icon + BTC Title Container */}
+        <View style={styles.iconTitleContainer}>
+          {/* Overlapping Circular Icons */}
+          <View style={{ position: 'relative', width: 30, height: 30,marginRight: 10 }}>
+            <Image 
+              source={require('../assets/eur.png')} 
+              style={{
+                width: 26,
+                height: 26,
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                borderRadius: 12,
+                zIndex: 1,
+              }}
+              resizeMode="cover"
+            />
+            <Image 
+              source={require('../assets/usd.png')} 
+              style={{
+                width: 24,
+                height: 24,
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                borderRadius: 12,
+                zIndex: 2,
+              }}
+              resizeMode="cover"
+            />
+          </View>
+
+          <Text style={styles.assetTitle}>EUR/USD</Text>
+        </View>
+        
+        {/* Price + Change Container */}
+        <View style={styles.priceChangeContainer}>
+          <Text style={styles.assetPrice}>117,901.93</Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
+            -1.31%
+          </Text>
+        </View>
+      </View>
+      
+      {/* Second Row: Subtitle */}
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.assetSubtitle} numberOfLines={1}>
+        Euro vs US Dollar
+        </Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+</View>
+
+{/* Bitcoin Trade Container #5 */}
+<View style={styles.tradeContainer1}>
+  <TouchableOpacity 
+    style={styles.tradeItem} 
+    onPress={() => handleTradePress('BTC')}
+    activeOpacity={0.7}
+  >
+    {/* Main Container */}
+    <View style={styles.tradeItemContent}>
+      
+      {/* First Row: Icon + Title + Price Info */}
+      <View style={styles.topRowContainer}>
+        
+        {/* Icon + BTC Title Container */}
+        <View style={styles.iconTitleContainer}>
+          {/* Overlapping Circular Icons */}
+          <View style={{ position: 'relative', width: 30, height: 30,marginRight: 10 }}>
+            <Image 
+              source={require('../assets/usd.png')} 
+              style={{
+                width: 24,
+                height: 24,
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                borderRadius: 14,
+                zIndex: 1,
+              }}
+              resizeMode="cover"
+            />
+            <Image 
+              source={require('../assets/usd.png')} 
+              style={{
+                width: 24,
+                height: 24,
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                padding:2,
+                marginLeft:6,
+                borderRadius: 12,
+                zIndex: 2,
+              }}
+              resizeMode="cover"
+            />
+          </View>
+
+          <Text style={styles.assetTitle}>GBP/USD</Text>
+        </View>
+        
+        {/* Price + Change Container */}
+        <View style={styles.priceChangeContainer}>
+          <Text style={styles.assetPrice}>117,901.93</Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
+            -1.31%
+          </Text>
+        </View>
+      </View>
+      
+      {/* Second Row: Subtitle */}
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.assetSubtitle} numberOfLines={1}>
+          British Pound vs US Dollar
+        </Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+</View>
+
+{/* Bitcoin Trade Container #5 */}
+<View style={styles.tradeContainer1}>
+  <TouchableOpacity 
+    style={styles.tradeItem} 
+    onPress={() => handleTradePress('BTC')}
+    activeOpacity={0.7}
+  >
+    {/* Main Container */}
+    <View style={styles.tradeItemContent}>
+      
+      {/* First Row: Icon + Title + Price Info */}
+      <View style={styles.topRowContainer}>
+        
+        {/* Icon + BTC Title Container */}
+        <View style={styles.iconTitleContainer}>
+          {/* Overlapping Circular Icons */}
+          <View style={{ position: 'relative', width: 30, height: 30,marginRight: 10 }}>
+            <Image 
+              source={require('../assets/usd.png')} 
+              style={{
+                width: 24,
+                height: 24,
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                borderRadius: 14,
+                zIndex: 1,
+              }}
+              resizeMode="cover"
+            />
+            <Image 
+              source={require('../assets/japan.png')} 
+              style={{
+                width: 24,
+                height: 24,
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                padding:2,
+                marginLeft:6,
+                borderRadius: 12,
+                zIndex: 2,
+              }}
+              resizeMode="cover"
+            />
+          </View>
+
+          <Text style={styles.assetTitle}>USD/JPY</Text>
+        </View>
+        
+        {/* Price + Change Container */}
+        <View style={styles.priceChangeContainer}>
+          <Text style={styles.assetPrice}>117,901.93</Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
+            -1.31%
+          </Text>
+        </View>
+      </View>
+      
+      {/* Second Row: Subtitle */}
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.assetSubtitle} numberOfLines={1}>
+          US Dollar vs Japanese Yen
+        </Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+</View>
+
+</ScrollView>
+
+{/* Fixed Footer Navigation */}
+<View style={styles.footer}>
+  <TouchableOpacity
+    style={styles.footerButton}
+    onPress={() => onNavigate && onNavigate('home')}
+  >
+    <Icon name="view-dashboard-outline" size={24} color="#888" />
+    <Text style={styles.footerText}>Accounts</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={styles.footerButton}
+    onPress={() => onNavigate && onNavigate('trade')}
+  >
+    <View style={{ marginBottom: 4 }}>
+      <TradeIcon size={24} color="#fff" />
+    </View>
+    <Text style={styles.footerTextActive}>Trade</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity style={styles.footerButton}>
+    <Icon name="web" size={24} color="#888888" />
+    <Text style={styles.footerText}>Insights</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={styles.footerButton}
+    onPress={() => onNavigate && onNavigate('graph')}
+  >
+    <View style={{ marginBottom: 4 }}>
+      <MaterialIcons name="signal-cellular-alt" size={24} color="#888" />
+    </View>
+    <Text style={styles.footerText}>Performance</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity style={styles.footerButton}>
+    <Icon name="account-circle-outline" size={24} color="#888888" />
+    <Text style={styles.footerText}>Profile</Text>
+  </TouchableOpacity>
+</View>
+</View>
+);
+};
 const styles = StyleSheet.create({
   tradeContainer1: {
     borderRadius: 4,
@@ -397,21 +677,77 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2A2A2A',
   },
-  tradeItemContent: {
+  footer: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    justifyContent: 'space-around',
+    backgroundColor: '#232222',
+    paddingVertical: 13,
+    borderTopWidth: 1,
+    borderTopColor: '#222',
+    position:'fixed',
+  },
+  footerButton: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  footerText: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  footerTextActive: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  tradeItemContent: {
+    flexDirection: 'column',
+    paddingVertical: 8,
+  },
+  topRowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  iconTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  priceChangeContainer: {
+    alignItems: 'flex-end',
+  },
+  subtitleContainer: {
+    marginTop: 4,
   },
   iconSection: {
     flexDirection: 'row',
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+    marginRight: 8,
+    overflow: 'hidden',
+  },
+  overlappingIcons: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+  },
+  iconOverlay: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    top: 0,
+    left: 0,
+    zIndex: 1,
   },
   assetIcon: {
     width: 36,
@@ -430,20 +766,20 @@ const styles = StyleSheet.create({
   },
   assetTitle: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    marginLeft: 5.6,
-    marginRight: 8,
-    marginBottom: 3,
   },
   priceSection: {
     alignItems: 'flex-end',
+    paddingVertical: 2,
+    paddingHorizontal: 3,
+    padding: 2,
   },
   assetPrice: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   assetFooter: {
     flexDirection: 'row',
@@ -453,9 +789,7 @@ const styles = StyleSheet.create({
   },
   assetSubtitle: {
     color: '#888',
-    fontSize: 12,
-    flex: 1,
-    marginRight: 10,
+    fontSize: 15,
   },
   changeContainer: {
     flexDirection: 'row',

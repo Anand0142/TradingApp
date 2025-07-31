@@ -1,6 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialIcons } from '@expo/vector-icons';
+import TradeIcon from '../assets/TradeIcon';
+import DepositIcon from '../assets/DepositIcon';
+import WithdrawIcon from '../assets/WithdrawIcon';
 
 export default function Home(props) {
   return (
@@ -11,10 +15,10 @@ export default function Home(props) {
         <View style={styles.headerIconsContainer}>
           <View style={styles.topIcons}>
             <TouchableOpacity style={styles.iconButton}>
-              <Icon name="alarm" size={20} color="white" />
+              <Icon name="alarm" size={24} color="white" />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.iconButton, {marginLeft: 15}]}>
-              <Icon name="bell-outline" size={20} color="white" />
+              <Icon name="bell-outline" size={24} color="white" />
               <View style={styles.notificationDot}></View>
             </TouchableOpacity>
           </View>
@@ -53,23 +57,23 @@ export default function Home(props) {
           <Text style={styles.balanceText}>500.00 USD</Text>
 
         <View style={styles.accountActions}>
-          <TouchableOpacity style={styles.actionButtonTrade}>
+          <TouchableOpacity style={styles.actionButtonTrade} onPress={() => props.onNavigate && props.onNavigate('trade')}>
             <View style={styles.tradeIconContainer}>
-            <Icon name="custom-candlestick" size={24} />
+              <TradeIcon size={30} color="black" />
             </View>
             <Text style={styles.tradeText}>Trade</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton}>
             <View style={styles.actionIconContainer}>
-              <Icon name="arrow-down" size={24} color="#fff" />
+              <DepositIcon size={29} color="#fff" />
             </View>
             <Text style={styles.actionText}>Deposit</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton}>
             <View style={styles.actionIconContainer}>
-                <Icon name="arrow-up" size={24} color="#fff" />
+              <WithdrawIcon size={29} color="#fff" />
             </View>
             <Text style={styles.actionText}>Withdraw</Text>
           </TouchableOpacity> 
@@ -122,13 +126,15 @@ export default function Home(props) {
                   style={styles.footerButton} 
                   onPress={() => onNavigate && onNavigate('home')}
                 >
-                  <Icon name="view-grid" size={24} color="#888" />
-                  <Text style={styles.footerText}>Accounts</Text>
+                  <Icon name="view-dashboard-outline" size={24} color="#fff" />
+                  <Text style={styles.footerTextActive}>Accounts</Text>
                 </TouchableOpacity>
         
         <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('trade')}>
-          <Icon name="chart-candlestick" size={24} color="#fff" />
-          <Text style={styles.footerTextActive}>Trade</Text>
+          <View style={{marginBottom: 4}}>
+            <TradeIcon size={24} color="#888" />
+          </View>
+          <Text style={styles.footerText}>Trade</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.footerButton}>
@@ -136,11 +142,13 @@ export default function Home(props) {
         <Text style={styles.footerText}>Insights</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('graph')}>
-        <Icon name="signal-cellular-alt" size={24} color="#888888" />
+        <View style={{marginBottom: 4}}>
+          <MaterialIcons name="signal-cellular-alt" size={24} color="#888" />
+        </View>
         <Text style={styles.footerText}>Performance</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.footerButton}>
-        <Icon name="account-circle" size={24} color="#888888" />
+        <Icon name="account-circle-outline" size={24} color="#888888" />
         <Text style={styles.footerText}>Profile</Text>
       </TouchableOpacity>
       </View>
@@ -341,14 +349,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   actionIconContainer: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#2C2C2C',
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: 'white',
   },
   actionIcon: {
@@ -372,9 +380,10 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingHorizontal: 5,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
+    marginRight:15,
   },
   tabButtonActive: {
     paddingVertical: 12,
@@ -413,8 +422,8 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#111',
-    paddingVertical: 10,
+    backgroundColor: '#232222',
+    paddingVertical: 13,
     borderTopWidth: 1,
     borderTopColor: '#222',
   },
