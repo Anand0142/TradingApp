@@ -12,6 +12,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
+import { Svg, Line, Polyline } from 'react-native-svg';
+
 
 const TradeScreen = ({ onNavigate }) => {
   const handleTradePress = (symbol) => {
@@ -20,8 +22,9 @@ const TradeScreen = ({ onNavigate }) => {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Scrollable content */}
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      
+      {/* Fixed Top Section */}
+      <View>
         {/* Balance */}
         <View style={styles.balanceContainer}>
           <View style={styles.balanceBox}>
@@ -33,10 +36,11 @@ const TradeScreen = ({ onNavigate }) => {
           </View>
         </View>
 
+        {/* Trade Header */}
         <View style={styles.tradeHeader}>
           <Text style={styles.tradeTitle}>Trade</Text>
           <TouchableOpacity>
-            <MaterialCommunityIcons name="alarm" size={26} color="white" />
+            <MaterialCommunityIcons name="alarm" size={26} color="white" style={{marginRight:20}} />
           </TouchableOpacity>
         </View>
 
@@ -57,7 +61,7 @@ const TradeScreen = ({ onNavigate }) => {
           </View>
         </View>
 
-        {/* Sorting row */}
+        {/* Sorted Section */}
         <View style={styles.sortRow}>
           <TouchableOpacity style={styles.sortButton}>
             <Text style={styles.sortText}>Sorted manually</Text>
@@ -67,19 +71,22 @@ const TradeScreen = ({ onNavigate }) => {
             <MaterialCommunityIcons name="square-edit-outline" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
+      </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         {/* Bitcoin Trade Container #1 */}
         <View style={styles.tradeContainer1}>
-          <TouchableOpacity 
-            style={styles.tradeItem} 
-            onPress={() => handleTradePress('BTC')}
-            activeOpacity={0.7}
-          >
-      {/* Main Container */}
+  <TouchableOpacity 
+    style={styles.tradeItem} 
+    onPress={() => handleTradePress('BTC')}
+    activeOpacity={0.7}
+  >
     <View style={styles.tradeItemContent}>
-      {/* First Row: Icon + Title + Price Info */}
       <View style={styles.topRowContainer}>
-        
-        {/* Icon + BTC Title Container */}
+
+        {/* Left Icon + BTC */}
         <View style={styles.iconTitleContainer}>
           <View style={styles.iconCircle}>
             <Image 
@@ -90,25 +97,52 @@ const TradeScreen = ({ onNavigate }) => {
           </View>
           <Text style={styles.assetTitle}>BTC</Text>
         </View>
-        
-        {/* Price + Change Container */}
-        <View style={styles.priceChangeContainer}>
-          <Text style={styles.assetPrice}>117,901.93</Text>
-          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
-            -1.31%
-          </Text>
+
+        {/* Mini Chart + Price */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {/* Mini Graph */}
+          <View style={{ width: 80, height: 30, marginRight: 10 }}>
+          <Svg height="30" width="80" marginLeft="-15">
+    {/* Dotted baseline */}
+    <Line
+      x1="1"
+      y1="15"
+      x2="90"
+      y2="15"
+      stroke="#888"
+      strokeWidth="2"
+      strokeDasharray="4"
+    />
+
+    {/* Realistic fluxing red line */}
+    <Polyline
+      points="0,14 10,10 20,16 30,11 40,17 50,13 60,19 70,15 80,23"
+      fill="none"
+      stroke="#FF5B5A"
+      strokeWidth="2"
+    />
+  </Svg>
+          </View>
+
+          {/* Price */}
+          <View style={styles.priceChangeContainer}>
+            <Text style={styles.assetPrice}>117,901.93</Text>
+            <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>↓1.31%</Text>
+          </View>
         </View>
+
       </View>
-      
-      {/* Second Row: Subtitle */}
+
+      {/* Subtitle */}
       <View style={styles.subtitleContainer}>
         <Text style={styles.assetSubtitle} numberOfLines={1}>
           Bitcoin vs US Dollar
         </Text>
       </View>
-      </View>
-      </TouchableOpacity>
     </View>
+  </TouchableOpacity>
+</View>
+
 
     {/* Bitcoin Trade Container #2 */}
 <View style={styles.tradeContainer1}>
@@ -163,9 +197,7 @@ const TradeScreen = ({ onNavigate }) => {
         {/* Price + Change Container */}
         <View style={styles.priceChangeContainer}>
           <Text style={styles.assetPrice}>3309.893</Text>
-          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
-            -0.71%
-          </Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>↓-0.71%</Text>
         </View>
       </View>
       
@@ -215,14 +247,38 @@ const TradeScreen = ({ onNavigate }) => {
           </View>
           <Text style={styles.assetTitle}>AAPL</Text>
         </View>
-        
-        {/* Price + Change Container */}
-        <View style={styles.priceChangeContainer}>
-          <Text style={styles.assetPrice}>117,901.93</Text>
-          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
-            -1.31%
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {/* Mini Graph */}
+          <View style={{ width: 80, height: 30, marginRight: 10 }}>
+          <Svg height="30" width="80" marginLeft="-15">
+    {/* Dotted baseline */}
+    <Line
+      x1="1"
+      y1="15"
+      x2="90"
+      y2="15"
+      stroke="#888"
+      strokeWidth="2"
+      strokeDasharray="4"
+    />
+
+    {/* Realistic fluxing red line */}
+    <Polyline
+      points="0,14 5,13 10,14 15,13 20,14 25,16 30,18 35,12 40,17 45,19 50,14 55,22 60,30 65,28 70,32 75,36 80,34"
+      fill="none"
+      stroke="#FF5B5A"
+      strokeWidth="2"
+    />
+  </Svg>
+          </View>
+
+          {/* Price */}
+          <View style={styles.priceChangeContainer}>
+            <Text style={styles.assetPrice}>117,901.93</Text>
+            <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>↓1.31%</Text>
+          </View>
         </View>
+      
       </View>
       
       {/* Second Row: Subtitle */}
@@ -287,9 +343,7 @@ const TradeScreen = ({ onNavigate }) => {
         {/* Price + Change Container */}
         <View style={styles.priceChangeContainer}>
           <Text style={styles.assetPrice}>117,901.93</Text>
-          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
-            -1.31%
-          </Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>↓-1.31%</Text>
         </View>
       </View>
       
@@ -356,9 +410,7 @@ const TradeScreen = ({ onNavigate }) => {
         {/* Price + Change Container */}
         <View style={styles.priceChangeContainer}>
           <Text style={styles.assetPrice}>117,901.93</Text>
-          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
-            -1.31%
-          </Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>↓-1.31%</Text>
         </View>
       </View>
       
@@ -425,9 +477,7 @@ const TradeScreen = ({ onNavigate }) => {
         {/* Price + Change Container */}
         <View style={styles.priceChangeContainer}>
           <Text style={styles.assetPrice}>117,901.93</Text>
-          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>
-            -1.31%
-          </Text>
+          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>↓-1.31%</Text>
         </View>
       </View>
       
@@ -535,9 +585,9 @@ const styles = StyleSheet.create({
   
   balanceContainer: {
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 35,
     marginBottom: 2,
-    padding:1,
+    padding:2,
   },
   
   balanceBox: {
