@@ -22,28 +22,6 @@ const COLORS = {
   bottomNavActiveIcon: '#000000',
   redDot: '#FF0000',
 };
-const AccountCard = ({ account, isSelected, onSelect }) => (
-  <TouchableOpacity 
-    style={[styles.accountOption, isSelected && styles.selectedAccountOption]}
-    onPress={onSelect}
-  >
-    <View style={styles.accountOptionHeader}>
-      <Text style={styles.accountOptionTitle}>
-        {account.type} <Text style={styles.accountOptionNumber}>#{account.number}</Text>
-      </Text>
-      <View style={styles.accountTags}>
-        <View style={styles.tagMT5}>
-          <Text style={styles.tagText}>MT5</Text>
-        </View>
-        <View style={account.isDemo ? styles.tagDemo : styles.tagStandard}>
-          <Text style={styles.tagText}>{account.isDemo ? 'Demo' : 'Real'}</Text>
-        </View>
-      </View>
-    </View>
-    <Text style={styles.accountOptionBalance}>{account.balance} INR</Text>
-  </TouchableOpacity>
-);
-
 export default function Home(props) {
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState({
@@ -53,7 +31,7 @@ export default function Home(props) {
     balance: '500.00',
     isDemo: false
   });
-
+const [accountTab, setAccountTab] = useState('real');
   const accounts = [
     {
       id: 1,
@@ -66,11 +44,24 @@ export default function Home(props) {
       id: 2,
       type: 'DEMO',
       number: '269446203',
-      balance: '10,000.00',
+      balance: '000.00',
       isDemo: true
     },
     // Add more accounts as needed
   ];
+  const handleDeposit = (amount) => {
+    // Update accounts array
+    const updatedAccounts = accounts.map(acc =>
+      acc.id === selectedAccount.id
+        ? { ...acc, balance: (parseFloat(acc.balance) + amount).toFixed(2) }
+        : acc
+    );
+    // Update selectedAccount
+    const updatedSelected = updatedAccounts.find(acc => acc.id === selectedAccount.id);
+    setSelectedAccount(updatedSelected);
+    // If you use accounts in state, update that too:
+    // setAccounts(updatedAccounts);
+  };
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -98,7 +89,15 @@ export default function Home(props) {
           <View style={styles.accountHeader}>
             <View style={styles.accountDetails}>
               <Text>
-                <Text style={styles.accountNumber}>STANDARD </Text>
+                <Text style={styles.accountNumber}>
+                  {selectedAccount.type === 'STANDARD'
+                  ? 'STANDARD'
+                  : selectedAccount.type === 'ZERO'
+                  ? 'ZERO'
+                  : selectedAccount.type === 'DEMO'
+                  ? 'ZERO'
+                  : selectedAccount.type}
+                </Text>
                 <Text style={styles.numberText}> # 269446202</Text>
               </Text>
               <View style={styles.accountTags}>
@@ -109,7 +108,8 @@ export default function Home(props) {
                   <Text style={styles.tagText}>Standard</Text>
                 </View>
                 <View style={styles.tagDemo}>
-                  <Text style={styles.tagText}>Real</Text>
+                  <Text style={styles.tagText}>Real
+                  </Text>
                 </View>
               </View>
             </View>
@@ -120,9 +120,107 @@ export default function Home(props) {
               <Text style={styles.chevron}>›</Text>
             </TouchableOpacity>
           </View>
-          
           <Text style={styles.balanceText}>{selectedAccount.balance} INR</Text>
+        <Modal
+          visible={showAccountSwitcher}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowAccountSwitcher(false)}>
+  <TouchableWithoutFeedback onPress={() => setShowAccountSwitcher(false)}>
+    <View style={styles.modalOverlay} />
+  </TouchableWithoutFeedback>
 
+  <View style={[styles.accountSwitcherContainer]}>
+    {/* Header */}
+    <View style={styles.switcherHeader}>
+      <Text style={styles.switcherTitle}>Accounts</Text>
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => setShowAccountSwitcher(false)}
+      >
+        <Text style={[styles.closeButtonText, { fontSize: 32 }]}>×</Text>
+      </TouchableOpacity>
+    </View>
+
+    {/* Tab Switcher */}
+    <View style={{ backgroundColor: '#fff', paddingTop: 8, marginBottom: 6 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+        }}
+      >
+        {['real', 'demo', 'archived'].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={{ flex: 1, alignItems: 'center', paddingVertical: 10 }}
+            onPress={() => setAccountTab(tab)}
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: accountTab === tab ? 'bold' : 'normal',
+                color: accountTab === tab ? '#000' : '#888',
+              }}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Tab Indicator */}
+      <View style={{ flexDirection: 'row', height: 2, marginHorizontal: 18 }}>
+        {['real', 'demo', 'archived'].map((tab) => (
+          <View
+            key={tab}
+            style={{
+              flex: 1,
+              backgroundColor: accountTab === tab ? '#000' : '#eee',
+              height: 2,
+              borderRadius: 1,
+            }}
+          />
+        ))}
+      </View>
+    </View>
+
+    {/* Content Area */}
+    <View style={{ flex: 1, paddingHorizontal: 16 }}>
+  {accountTab === 'real' ? (
+    <>
+      {accounts
+        .filter((acc) => !acc.isDemo)
+        .map((account) => (
+          <AccountCard
+            key={account.id}
+            account={account}
+            isSelected={selectedAccount.id === account.id}
+            onSelect={() => {
+              setSelectedAccount(account);
+              setShowAccountSwitcher(false);
+            }}
+          />
+        ))}
+    </>
+  ) : (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#888', textAlign: 'center' }}>
+        No accounts in this section.
+      </Text>
+    </View>
+  )}
+</View>
+  </View>
+</Modal>
         <View style={styles.accountActions}>
           <TouchableOpacity style={styles.actionButtonTrade} onPress={() => props.onNavigate && props.onNavigate('trade')}>
             <View style={styles.tradeIconContainer}>
@@ -215,7 +313,7 @@ export default function Home(props) {
         </View>
           {/* Explore more */}
           <View style={styles.explore1}>
-            <MaterialCommunityIcons name="search" size={18} color="#333" />
+            <MaterialCommunityIcons name="magnify" size={18} color="#333" />
            <Text style={styles.exploreText1}>Explore more instruments</Text>
           </View>
     </View>
@@ -263,31 +361,94 @@ export default function Home(props) {
         <TouchableWithoutFeedback onPress={() => setShowAccountSwitcher(false)}>
           <View style={styles.modalOverlay} />
         </TouchableWithoutFeedback>
-        
         <View style={styles.accountSwitcherContainer}>
           <View style={styles.switcherHeader}>
-            <Text style={styles.switcherTitle}>Select Account</Text>
+            <Text style={styles.switcherTitle}>Accounts</Text>
             <TouchableOpacity 
               style={styles.closeButton}
               onPress={() => setShowAccountSwitcher(false)}
             >
-              <Text style={styles.closeButtonText}>×</Text>
+              <Text style={[styles.closeButtonText, {fontSize: 32}]}>×</Text>
             </TouchableOpacity>
           </View>
-          
+          {/* Tab Switcher */}
+          <View style={{backgroundColor: '#fff', paddingTop: 8, marginBottom: 6}}>
+            <View style={{flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', position: 'relative', paddingHorizontal: 16}}>
+              <TouchableOpacity
+                style={{flex: 1, alignItems: 'center', paddingVertical: 10}}
+                onPress={() => setAccountTab('real')}
+              >
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: accountTab === 'real' ? 'bold' : 'normal',
+                  color: accountTab === 'real' ? '#000' : '#888'
+                }}>Real</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{flex: 1, alignItems: 'center', paddingVertical: 10}}
+                onPress={() => setAccountTab('demo')}
+              >
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: accountTab === 'demo' ? 'bold' : 'normal',
+                  color: accountTab === 'demo' ? '#000' : '#888'
+                }}>Demo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{flex: 1, alignItems: 'center', paddingVertical: 10}}
+                onPress={() => setAccountTab('archived')}
+              >
+                <Text style={{
+                  fontSize: 16,
+                  fontWeight: accountTab === 'archived' ? 'bold' : 'normal',
+                  color: accountTab === 'archived' ? '#000' : '#888'
+                }}>Archived</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Tab indicator */}
+            <View style={{flexDirection: 'row', height: 2, marginHorizontal: 18}}>
+              <View style={{
+                flex: 1,
+                backgroundColor: accountTab === 'real' ? '#000' : '#eee',
+                height: 2,
+                borderRadius: 1,
+                transition: 'all 0.2s'
+              }} />
+              <View style={{
+                flex: 1,
+                backgroundColor: accountTab === 'demo' ? '#000' : '#eee',
+                height: 2,
+                borderRadius: 1,
+                transition: 'all 0.2s'
+              }} />
+              <View style={{
+                flex: 1,
+                backgroundColor: accountTab === 'archived' ? '#000' : '#eee',
+                height: 2,
+                borderRadius: 1,
+                transition: 'all 0.2s'
+              }} />
+            </View>
+          </View>
+          {/* Account List */}
           <ScrollView style={styles.accountsList}>
-            {accounts.map((account) => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                isSelected={selectedAccount.id === account.id}
-                onSelect={() => {
-                  setSelectedAccount(account);
-                  setShowAccountSwitcher(false);
-                }}
-              />
-            ))}
-          </ScrollView>
+  {accounts
+    .filter((acc) => {
+      if (accountTab === 'real') return true; // Show all accounts
+      return false; // Show nothing for demo/archived
+    })
+    .map((account) => (
+      <AccountCard
+        key={account.id}
+        account={account}
+        isSelected={selectedAccount.id === account.id}
+        onSelect={() => {
+          setSelectedAccount(account);
+          setShowAccountSwitcher(false);
+        }}
+      />
+    ))}
+</ScrollView>
         </View>
       </Modal>
     </View>
@@ -308,8 +469,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 25,
     borderTopRightRadius: 20,
-    maxHeight: '70%',
-    paddingBottom: 30,
+    height: 400, // Increased height
+    paddingBottom: 20,
   },
   switcherHeader: {
     flexDirection: 'row',
@@ -320,8 +481,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   switcherTitle: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: 'bold',
+    marginRight: 20,
   },
   closeButton: {
     padding: 5,
@@ -329,26 +491,28 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 24,
     color: '#666',
+    marginleft: 25,
   },
   accountsList: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
   },
   accountOption: {
     padding: 15,
     borderRadius: 10,
-    marginVertical: 8,
+    marginVertical: 10,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#eee',
+    minHeight: 64,
   },
   selectedAccountOption: {
-    borderColor: 'orange',
-    backgroundColor: '#FFF8E1',
+    backgroundColor: 'white',
   },
   accountOptionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 5,
+    marginBottom: 10,
+    marginTop: 5,
   },
   accountOptionTitle: {
     fontSize: 16,
@@ -590,10 +754,6 @@ tabsRow: {
   flexDirection: 'row',
   justifyContent: 'space-between',
   paddingHorizontal: 15,
-
-  // ❌ REMOVE these if still present
-  // borderBottomWidth: 1,
-  // borderBottomColor: '#333',
 },
 
 tabButton: {
@@ -720,3 +880,68 @@ tabButtonActive: {
     fontWeight: '500',
   },
 });
+
+function AccountCard({ account, isSelected, onSelect }) {
+  const displayType = account.isDemo ? 'Zero' : 'Standard';
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.accountOption,
+        isSelected && styles.selectedAccountOption,
+        { flexDirection: 'column', padding: 12 },
+      ]}
+      onPress={onSelect}
+      activeOpacity={0.8}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 10,
+          marginTop: 5,
+        }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#222' }}>
+          {displayType}
+        </Text>
+        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#222' }}>
+          {account.balance}  INR
+        </Text>
+      </View>
+
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: '#E0F7FA',
+            borderRadius: 6,
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            marginRight: 6,
+          }}
+        >
+          <Text style={{ color: '#009688', fontSize: 13 }}>MT5</Text>
+        </View>
+        <View
+          style={{
+            backgroundColor: '#E0F7FA',
+            borderRadius: 6,
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+            marginRight: 6,
+          }}
+        >
+          <Text style={{ color: '#009688', fontSize: 13 }}>{displayType}</Text>
+        </View>
+        <Text style={{ color: '#666', fontSize: 13 }}># {account.number}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}

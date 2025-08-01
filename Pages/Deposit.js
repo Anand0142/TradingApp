@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const Deposit = ({ onNavigate }) => {
+const Deposit = ({ onNavigate, onDeposit }) => {
   const [amount, setAmount] = useState('');
 
   const handleContinue = () => {
@@ -17,6 +17,8 @@ const Deposit = ({ onNavigate }) => {
     if (isNaN(numericAmount) || numericAmount <= 0) {
       Alert.alert('Invalid Amount', 'Please enter at least 1 rupee to proceed.');
     } else {
+      // Add deposit to balance
+      onDeposit && onDeposit(numericAmount);
       // Navigate to DepositStatus with the amount
       onNavigate && onNavigate('depositStatus', { amount: amount });
     }
