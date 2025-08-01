@@ -125,7 +125,7 @@ export default function Home(props) {
               </View>
             </TouchableOpacity>
           </View>
-          <View style={styles.tabIndicator}></View>
+          <View style={styles.bottomLine} />
         </View>
     <View style={styles.container1}>
       {/* No open positions */}
@@ -432,22 +432,20 @@ const styles = StyleSheet.create({
   tabsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   tabButton: {
     paddingVertical: 12,
     paddingHorizontal: 5,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
-    marginRight:15,
+    marginRight:30,
   },
   tabButtonActive: {
     paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingHorizontal: 13,
     borderBottomWidth: 2,
-    borderBottomColor: 'black',
   },
   tabText: {
     color: '#888',
@@ -464,14 +462,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  tabIndicator: {
-    height: 2,
-    backgroundColor: '#E0E0E0',
-    position: 'absolute',
-    left: 0,
-    right: 12,
-    bottom: -1,
-  },
+  bottomLine: {
+  height: 1,
+  backgroundColor: 'blue',
+  marginHorizontal: 15, // 👈 Adjust to align with the white card above
+  marginTop: -1,        // Optional: pull it closer to tabs
+},
+
   emptyStateContainer: {
     padding: 15,
     marginTop: 20,
