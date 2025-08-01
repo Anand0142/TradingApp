@@ -5,7 +5,22 @@ import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
 import DepositIcon from '../assets/DepositIcon';
 import WithdrawIcon from '../assets/WithdrawIcon';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
+const COLORS = {
+  primaryBackground: '#F0F2F6',
+  cardBackground: '#FFFFFF',
+  elementBackground: '#E8EDF0',
+  borderColor: '#DCDCDC',
+  textBlack: '#000000',
+  text: 'orange',
+  textGray: '#808080',
+  accentGreen: '#4CAF50',
+  accentYellow: '#FFE535',
+  bottomNavIcon: '#808080',
+  bottomNavActiveIcon: '#000000',
+  redDot: '#FF0000',
+};
 export default function Home(props) {
   return (
     <View style={styles.container}>
@@ -14,11 +29,11 @@ export default function Home(props) {
         <Text style={styles.headerText}>Accounts</Text>
         <View style={styles.headerIconsContainer}>
           <View style={styles.topIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon name="alarm" size={24} color="white" />
+            <TouchableOpacity style={[styles.iconButton,{fontWeight: 'bold'}]}>
+              <Icon name="alarm" size={24} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconButton, {marginLeft: 15}]}>
-              <Icon name="bell-outline" size={24} color="white" />
+            <TouchableOpacity style={[styles.iconButton, {marginLeft: 15},{fontWeight: 'bold'}]}>
+              <Icon name="bell-outline" size={24} color="black" />
               <View style={styles.notificationDot}></View>
             </TouchableOpacity>
           </View>
@@ -35,7 +50,7 @@ export default function Home(props) {
             <View style={styles.accountDetails}>
               <Text>
                 <Text style={styles.accountNumber}>STANDARD </Text>
-                <Text style={styles.numberText}># 269446202</Text>
+                <Text style={styles.numberText}> # 269446202</Text>
               </Text>
               <View style={styles.accountTags}>
                 <View style={styles.tagMT5}>
@@ -54,12 +69,12 @@ export default function Home(props) {
             </View>
           </View>
           
-          <Text style={styles.balanceText}>{props.balance ? parseFloat(props.balance).toFixed(2) : '500.00'} USD</Text>
+          <Text style={styles.balanceText}>{props.balance ? parseFloat(props.balance).toFixed(2) : '500.00'} INR</Text>
 
         <View style={styles.accountActions}>
           <TouchableOpacity style={styles.actionButtonTrade} onPress={() => props.onNavigate && props.onNavigate('trade')}>
             <View style={styles.tradeIconContainer}>
-              <TradeIcon size={30} color="black" />
+              <TradeIcon size={29} color="black" />
             </View>
             <Text style={styles.tradeText}>Trade</Text>
           </TouchableOpacity>
@@ -67,22 +82,22 @@ export default function Home(props) {
           <TouchableOpacity 
             style={styles.actionButton}
             onPress={() => props.onNavigate && props.onNavigate('deposit')}
-          >
+           >
             <View style={styles.actionIconContainer}>
-              <DepositIcon size={29} color="#fff" />
+              <DepositIcon size={29} color="black" />
             </View>
             <Text style={styles.actionText}>Deposit</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton}>
             <View style={styles.actionIconContainer}>
-              <WithdrawIcon size={29} color="#fff" />
+              <WithdrawIcon size={29} color="black" />
             </View>
             <Text style={styles.actionText}>Withdraw</Text>
           </TouchableOpacity> 
           <TouchableOpacity style={styles.actionButton}>
             <View style={styles.actionIconContainer}>
-              <Icon name="dots-vertical" size={24} color="#fff" />
+              <Icon name="dots-vertical" size={26} color="black" />
             </View>
             <Text style={styles.actionText}>Details</Text>
           </TouchableOpacity>
@@ -112,21 +127,54 @@ export default function Home(props) {
           </View>
           <View style={styles.tabIndicator}></View>
         </View>
-        
-        {/* Empty state placeholders */}
-        <View style={styles.emptyStateContainer}>
-          {/* These are the gray bars shown in the image */}
-          <View style={styles.placeholderBar}></View>
-          <View style={styles.placeholderBar}></View>
-          <View style={styles.placeholderBar}></View>
-          <View style={styles.placeholderBar}></View>
+    <View style={styles.container1}>
+      {/* No open positions */}
+      <Text style={styles.statusText1}>No open positions</Text>
+
+      {/* Trade box */}
+      <View style={styles.tradeBox1}>
+        <View style={{ position: 'relative', width: 30, height: 30 }}>
+            <Image 
+              source={require('../assets/gold.png')} 
+              style={{
+              width: 24,
+              height: 24,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              borderRadius: 12, // Makes it a circle
+              zIndex: 1
+              }}
+              resizeMode="cover" // Ensures full cover in circle
+            />
+            <Image 
+              source={require('../assets/usd.png')} 
+              style={{
+              width: 24,
+              height: 24,
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              borderRadius: 12, // Makes it a circle
+              zIndex: 2
+              }}
+              resizeMode="cover"
+            />
+          </View>
+          <Text style={styles.tradeText1}>XAU/USD - Trade</Text>
         </View>
-      </ScrollView>
+          {/* Explore more */}
+          <View style={styles.explore1}>
+            <MaterialCommunityIcons name="search" size={18} color="#333" />
+           <Text style={styles.exploreText1}>Explore more instruments</Text>
+          </View>
+    </View>
+    </ScrollView>
 
       {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerButton} onPress={() => onNavigate && onNavigate('home')}>
-            <Icon name="view-dashboard-outline" size={24} color="#fff" />
+            <Icon name="view-dashboard-outline" size={24} color="black" />
             <Text style={styles.footerTextActive}>Accounts</Text>
         </TouchableOpacity>
         
@@ -161,7 +209,7 @@ export default function Home(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#F4F4F4',
   },
   scrollView: {
     flex: 1,
@@ -171,13 +219,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 5,
-    backgroundColor: '#000000',
+    backgroundColor: '#F4F4F4',
     paddingTop: 3,
+    marginBottom: 15,
+    marginTop: 8,
   },
   headerText: {
-    color: 'white',
-    fontSize: 37,
-    fontWeight: '900',
+    color: COLORS.textBlack,
+    fontSize: 35,
+    fontWeight: 'bold',
     paddingTop: 63,
     marginLeft:20,
   },
@@ -216,11 +266,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     marginRight:22,
+    paddingVertical: 4,
   },
   numberText: {
-    fontSize: 18,
-    color: '#CDD6CF',      
-    fontWeight: '700',    
+    fontSize: 14,
+    color: '#A9ABAC',      
+    fontWeight: '500',    
   },
   notificationDot: {
     position: 'absolute',
@@ -235,22 +286,29 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2D2D2D',
+    backgroundColor: '#ECECED',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight:20,
   },
   headerButtonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: '#393C3C',
+    fontSize: 22,
+    fontWeight: '500',
+    marginBottom: 7,
   },
-  accountCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    margin: 15,
-    padding: 20,
-  },
+  accountCard: { 
+    backgroundColor: '#fff',
+   borderRadius: 15,
+   padding: 15, // Reduced from 20
+   marginBottom: 15, // Reduced from 20
+   shadowColor: '#000',
+   shadowOffset: { width: 0, height: 2 },
+   shadowOpacity: 0.05,
+   shadowRadius: 2,
+   elevation: 2,
+   marginHorizontal: 15,
+   },
   accountHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -261,66 +319,64 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   accountNumber: {
-    fontSize: 16,
-    color: 'white',
-    fontWeight: '900',
+    fontSize: 14,
+    color: 'black',
+    fontWeight: '500',
     marginBottom: 10,
   },
   accountTags: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 6, 
+    marginTop: 10, 
   },
   tagMT5: {
-    backgroundColor: '#2A4D3A',
+    backgroundColor: '#ECECED',
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 20,
   },
   tagStandard: {
-    backgroundColor: '#2A4D3A',
-    borderWidth: 1,
-    borderColor: '#444',
+    backgroundColor: '#ECECED',
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 20,
   },
   tagDemo: {
-    backgroundColor: '#2A4D3A',
-    borderWidth: 1,
-    borderColor: '#444',
+    backgroundColor: '#ECECED',
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 20,
   },
   tagText: {
-    color: '#91D9A1',
+    color: 'black',
     fontSize: 14,
   },
   chevronCircle: {
-    backgroundColor: '#2C2D2D',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    backgroundColor: '#ECECED',
+    width: 42,
+    height: 42,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 30,
+    marginRight:4,
   },
   chevron: {
-    color: 'white',
-    fontSize: 24,
-    marginBottom: 15,
+    color: '#393C3C',
+    fontSize: 26,
+    marginBottom: 14,
   },
   balanceText: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: 'white',
-    marginVertical: 20,
+    color: COLORS.textBlack,
+    marginVertical: 5,
   },
   accountActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
+    marginRight: 6,
   },
   actionButton: {
     alignItems: 'center',
@@ -334,25 +390,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    marginRight:2,
   },
   tradeIcon: {
-    fontSize: 24,
+    fontSize: 22,
     color: 'black',
   },
   tradeText: {
-    color: 'white',
+    color: '#555657',
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: '400',
+    marginRight:8,
   },
   actionIconContainer: {
-    backgroundColor: '#2C2C2C',
+    backgroundColor: '#ECECED',
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -360,13 +418,13 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   actionIcon: {
-    fontSize: 24,
+    fontSize: 22,
     color: 'white',
   },
   actionText: {
-    color: 'white',
+    color: '#555657',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '400',
   },
   tabs: {
     marginTop: 20,
@@ -389,16 +447,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 15,
     borderBottomWidth: 2,
-    borderBottomColor: 'white',
+    borderBottomColor: 'black',
   },
   tabText: {
     color: '#888',
     fontSize: 16,
   },
   tabTextActive: {
-    color: 'white',
+    color: 'black',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
   refreshButton: {
     paddingVertical: 10,
@@ -407,7 +465,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabIndicator: {
-    display: 'none', 
+    height: 2,
+    backgroundColor: '#E0E0E0',
+    position: 'absolute',
+    left: 0,
+    right: 12,
+    bottom: -1,
   },
   emptyStateContainer: {
     padding: 15,
@@ -422,10 +485,10 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#232222',
-    paddingVertical: 13,
-    borderTopWidth: 1,
-    borderTopColor: '#222',
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    borderTopWidth: 0.2,
+    borderTopColor: '#BFC0BF',
   },
   footerButton: {
     alignItems: 'center',
@@ -440,14 +503,69 @@ const styles = StyleSheet.create({
   footerIcon: {
     color: '#888',
     fontSize: 20,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   footerText: {
     color: '#888',
     fontSize: 12,
   },
   footerTextActive: {
-    color: 'white',
+    color: 'black',
     fontSize: 12,
+  },
+  container1: {
+    padding: 16,
+    backgroundColor: '#F4F4F4',
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  statusText1: {
+    fontSize: 16,
+    color: 'black',
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  tradeBox1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECECEC',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 17,
+    width: 405,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconContainer1: {
+    flexDirection: 'row',
+    position: 'relative',
+    marginRight: 8,
+  },
+  icon1: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  overlapIcon1: {
+    position: 'absolute',
+    left: 12,
+    top: 0,
+    zIndex: 1,
+  },
+  tradeText1: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#000',
+  },
+  explore1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  exploreText1: {
+    marginLeft: 4,
+    fontSize: 16,
+    color: 'black',
+    fontWeight: '500',
   },
 });
