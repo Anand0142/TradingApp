@@ -1,11 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
 import DepositIcon from '../assets/DepositIcon';
 import WithdrawIcon from '../assets/WithdrawIcon';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useState } from 'react';
 
 const COLORS = {
   primaryBackground: '#F0F2F6',
@@ -21,7 +22,55 @@ const COLORS = {
   bottomNavActiveIcon: '#000000',
   redDot: '#FF0000',
 };
+const AccountCard = ({ account, isSelected, onSelect }) => (
+  <TouchableOpacity 
+    style={[styles.accountOption, isSelected && styles.selectedAccountOption]}
+    onPress={onSelect}
+  >
+    <View style={styles.accountOptionHeader}>
+      <Text style={styles.accountOptionTitle}>
+        {account.type} <Text style={styles.accountOptionNumber}>#{account.number}</Text>
+      </Text>
+      <View style={styles.accountTags}>
+        <View style={styles.tagMT5}>
+          <Text style={styles.tagText}>MT5</Text>
+        </View>
+        <View style={account.isDemo ? styles.tagDemo : styles.tagStandard}>
+          <Text style={styles.tagText}>{account.isDemo ? 'Demo' : 'Real'}</Text>
+        </View>
+      </View>
+    </View>
+    <Text style={styles.accountOptionBalance}>{account.balance} INR</Text>
+  </TouchableOpacity>
+);
+
 export default function Home(props) {
+  const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState({
+    id: 1,
+    type: 'STANDARD',
+    number: '269446202',
+    balance: '500.00',
+    isDemo: false
+  });
+
+  const accounts = [
+    {
+      id: 1,
+      type: 'STANDARD',
+      number: '269446202',
+      balance: '500.00',
+      isDemo: false
+    },
+    {
+      id: 2,
+      type: 'DEMO',
+      number: '269446203',
+      balance: '10,000.00',
+      isDemo: true
+    },
+    // Add more accounts as needed
+  ];
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -64,12 +113,15 @@ export default function Home(props) {
                 </View>
               </View>
             </View>
-            <View style={styles.chevronCircle}>
+            <TouchableOpacity 
+              style={styles.chevronCircle}
+              onPress={() => setShowAccountSwitcher(true)}
+            >
               <Text style={styles.chevron}>›</Text>
-            </View>
+            </TouchableOpacity>
           </View>
           
-          <Text style={styles.balanceText}>{props.balance ? parseFloat(props.balance).toFixed(2) : '500.00'} INR</Text>
+          <Text style={styles.balanceText}>{selectedAccount.balance} INR</Text>
 
         <View style={styles.accountActions}>
           <TouchableOpacity style={styles.actionButtonTrade} onPress={() => props.onNavigate && props.onNavigate('trade')}>
@@ -106,18 +158,16 @@ export default function Home(props) {
 
         {/* Tabs */}
         <View style={styles.tabs}>
-          <View style={styles.tabsRow}>
-            <TouchableOpacity style={styles.tabButtonActive}>
-              <Text style={styles.tabTextActive}>Open</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.tabButton}>
-              <Text style={styles.tabText}>Pending</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.tabButton}>
-              <Text style={styles.tabText}>Closed</Text>
-            </TouchableOpacity>
+  <View style={styles.tabsRow}>
+    <TouchableOpacity style={styles.tabButtonActive}>
+      <Text style={styles.tabTextActive}>Open</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.tabButton}>
+      <Text style={styles.tabText}>Pending</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.tabButton}>
+      <Text style={styles.tabText}>Closed</Text>
+    </TouchableOpacity>
             <TouchableOpacity style={styles.refreshButton}>
               <View style={styles.arrowContainer}>
                 <Text style={styles.arrowright}>↑</Text>
@@ -135,17 +185,17 @@ export default function Home(props) {
       <View style={styles.tradeBox1}>
         <View style={{ position: 'relative', width: 30, height: 30 }}>
             <Image 
-              source={require('../assets/gold.png')} 
+              source={require('../assets/eng.png')} 
               style={{
               width: 24,
               height: 24,
               position: 'absolute',
               top: 0,
               left: 0,
-              borderRadius: 12, // Makes it a circle
+              borderRadius: 12, 
               zIndex: 1
               }}
-              resizeMode="cover" // Ensures full cover in circle
+              resizeMode="cover"
             />
             <Image 
               source={require('../assets/usd.png')} 
@@ -155,7 +205,7 @@ export default function Home(props) {
               position: 'absolute',
               bottom: 0,
               right: 0,
-              borderRadius: 12, // Makes it a circle
+              borderRadius: 12, 
               zIndex: 2
               }}
               resizeMode="cover"
@@ -202,11 +252,116 @@ export default function Home(props) {
       </View>
 
       <StatusBar style="light" />
+
+      {/* Account Switcher Modal */}
+      <Modal
+        visible={showAccountSwitcher}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAccountSwitcher(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowAccountSwitcher(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        
+        <View style={styles.accountSwitcherContainer}>
+          <View style={styles.switcherHeader}>
+            <Text style={styles.switcherTitle}>Select Account</Text>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowAccountSwitcher(false)}
+            >
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.accountsList}>
+            {accounts.map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                isSelected={selectedAccount.id === account.id}
+                onSelect={() => {
+                  setSelectedAccount(account);
+                  setShowAccountSwitcher(false);
+                }}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Account Switcher Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  accountSwitcherContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingBottom: 30,
+  },
+  switcherHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  switcherTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#666',
+  },
+  accountsList: {
+    paddingHorizontal: 15,
+  },
+  accountOption: {
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  selectedAccountOption: {
+    borderColor: 'orange',
+    backgroundColor: '#FFF8E1',
+  },
+  accountOptionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+  accountOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  accountOptionNumber: {
+    color: '#666',
+  },
+  accountOptionBalance: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F4F4F4',
@@ -427,35 +582,34 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   tabs: {
-    marginTop: 20,
-  },
-  tabsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-  },
-  tabButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 5,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-    marginRight:30,
-  },
-  tabButtonActive: {
-    paddingVertical: 12,
-    paddingHorizontal: 13,
-    borderBottomWidth: 2,
-  },
-  tabText: {
-    color: '#888',
-    fontSize: 16,
-  },
-  tabTextActive: {
-    color: 'black',
-    fontSize: 16,
-    fontWeight: '500',
-  },
+  marginTop: 20,
+  backgroundColor: '#f5f5f5', // Optional
+},
+
+tabsRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  paddingHorizontal: 15,
+
+  // ❌ REMOVE these if still present
+  // borderBottomWidth: 1,
+  // borderBottomColor: '#333',
+},
+
+tabButton: {
+  paddingVertical: 12,
+  paddingHorizontal: 5,
+  borderBottomWidth: 2,
+  borderBottomColor: 'transparent',
+  marginRight: 15,
+},
+
+tabButtonActive: {
+  paddingVertical: 12,
+  paddingHorizontal: 15,
+  borderBottomWidth: 2,
+  borderBottomColor: 'black', // ✅ This is expected
+},
   refreshButton: {
     paddingVertical: 10,
     paddingHorizontal: 15,
@@ -463,10 +617,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bottomLine: {
-  height: 1,
-  backgroundColor: 'blue',
-  marginHorizontal: 15, // 👈 Adjust to align with the white card above
-  marginTop: -1,        // Optional: pull it closer to tabs
+  height: 2,
+  backgroundColor: '#EAEAEA',     // ✅ For testing visibility
+  marginHorizontal: 15,
+  marginTop: -1,               // Optional alignment tweak
 },
 
   emptyStateContainer: {
