@@ -46,17 +46,23 @@ const TradeScreen = ({ onNavigate }) => {
 
         {/* Tab Bar */}
         <View style={styles.tabBar}>
-          <View style={styles.tabContainer}>
-            <View style={styles.tabItem}>
-              <Text style={styles.tabActive}>Favorites</Text>
-              <View style={styles.activeTabIndicator} />
-            </View>
-            <Text style={styles.tab}>Most traded</Text>
-            <Text style={styles.tab}>Top Movers</Text>
-            <Text style={styles.tab}>Markets</Text>
-            <View style={styles.tabSpacer} />
+          <View style={styles.tabContent}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.scrollViewContent}
+            >
+              <View style={styles.tabItem}>
+                <Text style={styles.tabActive}>Favorites</Text>
+                <View style={styles.activeTabIndicator} />
+              </View>
+              <Text style={styles.tab}>Most traded</Text>
+              <Text style={styles.tab}>Top Movers</Text>
+              <Text style={styles.tab}>Markets</Text>
+              <View style={styles.tabSpacer} />
+            </ScrollView>
             <TouchableOpacity style={styles.searchIcon}>
-              <MaterialCommunityIcons name="magnify" size={30} color="white" />
+              <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -585,7 +591,7 @@ const styles = StyleSheet.create({
   
   balanceContainer: {
     alignItems: 'center',
-    marginTop: 35,
+    marginTop: 5,
     marginBottom: 2,
     padding:2,
   },
@@ -640,8 +646,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    marginTop: 10,
+    paddingHorizontal: 10,
+    marginTop: 17,
     marginBottom: 5,
   },
   tabBar: {
@@ -650,14 +656,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#2A2A2A',
   },
+  tabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  scrollViewContent: {
+    paddingRight: 12,
+  },
   tabContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
   },
   tabItem: {
     position: 'relative',
-    marginRight: 15,
+    marginRight: 20,
     paddingVertical: 12,
   },
   tabActive: {
@@ -676,7 +689,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     color: '#888',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
     marginRight: 20,
     paddingVertical: 12,
@@ -685,8 +698,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchIcon: {
-    padding: 2,
-    marginRight:12,
+    padding: 8,
+    marginLeft: 8,
   },
   sortRow: {
     flexDirection: 'row',

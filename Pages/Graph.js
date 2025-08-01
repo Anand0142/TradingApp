@@ -9,6 +9,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { BarChart } from 'react-native-chart-kit';
+import TradeIcon from '../assets/TradeIcon';
 
 const screenWidth = Dimensions.get('window').width - 64;
 
@@ -123,24 +124,36 @@ const Graph = (props) => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('home')}>
-          <MaterialCommunityIcons name="view-grid" size={24} color="#888" />
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => props.onNavigate && props.onNavigate('home')}
+        >
+          <MaterialCommunityIcons name="view-dashboard-outline" size={24} color="#888" />
           <Text style={styles.footerText}>Accounts</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('trade')}>
-          <MaterialCommunityIcons name="chart-candlestick" size={24} color="#000" />
-          <Text style={styles.footerTextActive}>Trade</Text>
+          <View style={{marginBottom: 4}}>
+            <TradeIcon size={24} color="#888" />
+          </View>
+          <Text style={styles.footerText}>Trade</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.footerButton}>
           <MaterialCommunityIcons name="web" size={24} color="#888" />
           <Text style={styles.footerText}>Insights</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('graph')}>
-          <MaterialIcons name="signal-cellular-alt" size={24} color="#000" />
+        
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => props.onNavigate && props.onNavigate('graph')}
+        >
+          <View style={{marginBottom: 4}}>
+            <MaterialIcons name="signal-cellular-alt" size={24} color="#000" />
+          </View>
           <Text style={styles.footerTextActive}>Performance</Text>
         </TouchableOpacity>
+        
         <TouchableOpacity style={styles.footerButton}>
           <MaterialCommunityIcons name="account-circle-outline" size={24} color="#888" />
           <Text style={styles.footerText}>Profile</Text>

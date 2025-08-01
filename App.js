@@ -4,18 +4,42 @@ import { SafeAreaView } from 'react-native';
 import Home from './Pages/Home';
 import Graph from './Pages/Graph';
 import Trade from './Pages/Trade';
+import Deposit from './Pages/Deposit';
+import DepositStatus from './Pages/depositStatus';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
+  const [currentParams, setCurrentParams] = useState({});
+  const [balance, setBalance] = useState(500.00); // Initial balance
+  
+  // Function to update balance
+  const updateBalance = (amount) => {
+    setBalance(prevBalance => prevBalance + parseFloat(amount));
+  };
+
+  const handleNavigation = (screen, params = {}) => {
+    setCurrentScreen(screen);
+    setCurrentParams(params);
+  };
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
-        return <Home onNavigate={setCurrentScreen} />;
+        return <Home onNavigate={handleNavigation} balance={balance} />;
       case 'graph':
-        return <Graph onNavigate={setCurrentScreen} />;
+        return <Graph onNavigate={handleNavigation} />;
       case 'trade':
-        return <Trade onNavigate={setCurrentScreen} />;
+        return <Trade onNavigate={handleNavigation} />;
+      case 'deposit':
+        return <Deposit onNavigate={handleNavigation} />;
+      case 'depositStatus':
+        return (
+          <DepositStatus 
+            onNavigate={handleNavigation} 
+            amount={currentParams.amount} 
+            onDepositSuccess={updateBalance}
+          />
+        );
       default:
         return <Home onNavigate={setCurrentScreen} />;
     }

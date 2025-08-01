@@ -54,7 +54,7 @@ export default function Home(props) {
             </View>
           </View>
           
-          <Text style={styles.balanceText}>500.00 USD</Text>
+          <Text style={styles.balanceText}>{props.balance ? parseFloat(props.balance).toFixed(2) : '500.00'} USD</Text>
 
         <View style={styles.accountActions}>
           <TouchableOpacity style={styles.actionButtonTrade} onPress={() => props.onNavigate && props.onNavigate('trade')}>
@@ -64,7 +64,10 @@ export default function Home(props) {
             <Text style={styles.tradeText}>Trade</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => props.onNavigate && props.onNavigate('deposit')}
+          >
             <View style={styles.actionIconContainer}>
               <DepositIcon size={29} color="#fff" />
             </View>
@@ -122,13 +125,10 @@ export default function Home(props) {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity 
-                  style={styles.footerButton} 
-                  onPress={() => onNavigate && onNavigate('home')}
-                >
-                  <Icon name="view-dashboard-outline" size={24} color="#fff" />
-                  <Text style={styles.footerTextActive}>Accounts</Text>
-                </TouchableOpacity>
+        <TouchableOpacity style={styles.footerButton} onPress={() => onNavigate && onNavigate('home')}>
+            <Icon name="view-dashboard-outline" size={24} color="#fff" />
+            <Text style={styles.footerTextActive}>Accounts</Text>
+        </TouchableOpacity>
         
         <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('trade')}>
           <View style={{marginBottom: 4}}>
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 5,
     backgroundColor: '#000000',
-    paddingTop: 50,
+    paddingTop: 3,
   },
   headerText: {
     color: 'white',
