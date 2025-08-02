@@ -183,16 +183,9 @@ export default function Home(props) {
           <View style={styles.accountHeader}>
             <View style={styles.accountDetails}>
               <Text>
-                <Text style={styles.accountNumber}>
-                  {selectedAccount.type === 'STANDARD'
-                  ? 'STANDARD'
-                  : selectedAccount.type === 'ZERO'
-                  ? 'ZERO'
-                  : selectedAccount.type === 'DEMO'
-                  ? 'ZERO'
-                  : selectedAccount.type}
+                <Text style={styles.accountNumber}>{selectedAccount.name?.trim() || selectedAccount.name}
                 </Text>
-                <Text style={styles.accountNumber}>#23234567</Text>
+                <Text style={styles.accountNumber}>#{selectedAccount.customId?.trim() || selectedAccount.number}</Text>
               </Text>
               <View style={styles.accountTags}>
                 <View style={styles.tagMT5}>
@@ -583,9 +576,22 @@ export default function Home(props) {
             padding: 24,
             borderRadius: 12,
             width: '80%',
-            alignItems: 'center'
+            alignItems: 'center',
+            position: 'relative'
           }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Add Account Details</Text>
+            <TouchableOpacity 
+              onPress={() => setShowAccountDialog(false)}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                padding: 6,
+                zIndex: 1
+              }}
+            >
+              <Icon name="close" size={24} color="#666" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16, marginTop: 10 }}>Add Account Details</Text>
             <TextInput
               style={{
                 width: '100%',
@@ -622,23 +628,51 @@ export default function Home(props) {
                 alignItems: 'center',
                 marginTop: 8
               }}
-              onPress={() => {
-                setAccounts(prev =>
-                  prev.map(acc =>
+              onPress={async () => {
+                if (!newName.trim() || !newId.trim()) {
+                  Alert.alert('Error', 'Please enter both name and ID');
+                  return;
+                }
+
+                try {
+                  // Update the selected account in the list
+                  const updatedAccounts = accounts.map(acc =>
                     acc.id === selectedAccount.id
-                      ? { ...acc, name: newName, customId: newId }
+                      ? { 
+                          ...acc, 
+                          name: newName.trim(), 
+                          customId: newId.trim(),
+                          // Preserve other account properties
+                          balance: acc.balance,
+                          number: acc.number,
+                          type: acc.type,
+                          isDemo: acc.isDemo
+                        }
                       : acc
-                  )
-                );
-                setSelectedAccount({
-                  ...selectedAccount,
-                  name: newName,
-                  customId: newId
-                });
-                setShowAccountDialog(false);
-                setNewName('');
-                setNewId('');
-              }}
+                  );
+              
+                  // Save updated accounts to AsyncStorage
+                  await AsyncStorage.setItem('accountsData', JSON.stringify(updatedAccounts));
+              
+                  // Update state with the modified account
+                  const updatedAccount = {
+                    ...selectedAccount,
+                    name: newName.trim(),
+                    customId: newId.trim()
+                  };
+                  
+                  setAccounts(updatedAccounts);
+                  setSelectedAccount(updatedAccount);
+              
+                  // Close dialog and clear inputs
+                  setShowAccountDialog(false);
+                  setNewName('');
+                  setNewId('');
+                } catch (err) {
+                  console.error('Failed to update account:', err);
+                  Alert.alert('Error', 'Failed to save account details');
+                }
+              }}              
             >
               <Text style={{ fontWeight: 'bold' }}>Continue</Text>
             </TouchableOpacity>
@@ -1089,8 +1123,8 @@ function AccountCard({ account, isSelected, onSelect }) {
       activeOpacity={0.8}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginTop: 5 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: '#222' }}>
-          {displayType}
+        <Text style={{ fontSize: 15, fontWeight: '600', color: '#222' }}>
+          {account.name?.trim() || displayType}
         </Text>
         <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#222' }}>
           {account.balance} INR
@@ -1104,7 +1138,7 @@ function AccountCard({ account, isSelected, onSelect }) {
           <Text style={{ color: '#009688', fontSize: 13 }}>{displayType}</Text>
         </View>
         <Text style={{ color: '#666', fontSize: 13 }}>
-          # {account.name && account.customId ? `${account.name} ${account.customId}` : account.number}
+          #{account.customId?.trim() || account.number}
         </Text>
       </View>
     </TouchableOpacity>
