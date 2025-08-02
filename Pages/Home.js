@@ -1,12 +1,15 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Modal, TouchableWithoutFeedback, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
 import DepositIcon from '../assets/DepositIcon';
 import WithdrawIcon from '../assets/WithdrawIcon';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useState } from 'react';
+import Deposit from './Deposit';
+import DepositStatus from './depositStatus';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 
 const COLORS = {
   primaryBackground: '#F0F2F6',
@@ -24,44 +27,135 @@ const COLORS = {
 };
 export default function Home(props) {
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState({
-    id: 1,
-    type: 'STANDARD',
-    number: '269446202',
-    balance: '500.00',
-    isDemo: false
-  });
-const [accountTab, setAccountTab] = useState('real');
-  const accounts = [
+  const [accountTab, setAccountTab] = useState('real');
+  const [showAccountDialog, setShowAccountDialog] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newId, setNewId] = useState('');
+
+  const [accounts, setAccounts] = useState([
     {
       id: 1,
       type: 'STANDARD',
       number: '269446202',
-      balance: '500.00',
-      isDemo: false
+      balance: 10.00,
+      isDemo: false,
+      name: '',
+      customId: ''
     },
     {
       id: 2,
       type: 'DEMO',
       number: '269446203',
-      balance: '000.00',
-      isDemo: true
+      balance: 10.00,
+      isDemo: true,
+      name: '',
+      customId: ''
     },
-    // Add more accounts as needed
-  ];
-  const handleDeposit = (amount) => {
-    // Update accounts array
-    const updatedAccounts = accounts.map(acc =>
-      acc.id === selectedAccount.id
-        ? { ...acc, balance: (parseFloat(acc.balance) + amount).toFixed(2) }
-        : acc
-    );
-    // Update selectedAccount
-    const updatedSelected = updatedAccounts.find(acc => acc.id === selectedAccount.id);
-    setSelectedAccount(updatedSelected);
-    // If you use accounts in state, update that too:
-    // setAccounts(updatedAccounts);
+  ]);
+  
+  const [selectedAccount, setSelectedAccount] = useState(undefined); 
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentScreen, setCurrentScreen] = useState('home');
+  const [screenParams, setScreenParams] = useState({});
+
+  const handleNavigation = (screen, params = {}) => {
+    console.log('Navigating to:', screen, 'with params:', params);
+    setCurrentScreen(screen);
+    setScreenParams(params);
   };
+
+  const handleDeposit = (updatedAccounts, updatedSelected) => {
+    setAccounts(updatedAccounts);
+    setSelectedAccount(updatedSelected);
+  };
+  
+  useEffect(() => {
+    const loadAccounts = async () => {
+      try {
+        const savedAccounts = await AsyncStorage.getItem('accountsData');
+        const savedSelectedId = await AsyncStorage.getItem('selectedAccountId'); // ✅ get saved id
+  
+        if (savedAccounts) {
+          const parsed = JSON.parse(savedAccounts);
+          setAccounts(parsed);
+  
+          let selectedAccountToSet = null;
+  
+          if (savedSelectedId) {
+            // 🔁 match saved ID with parsed accounts
+            selectedAccountToSet = parsed.find(acc => acc.id === Number(savedSelectedId));
+          }
+  
+          if (!selectedAccountToSet) {
+            // fallback to STANDARD or first account
+            selectedAccountToSet = parsed.find(acc => acc.type === 'STANDARD') || parsed[0];
+          }
+  
+          setSelectedAccount(selectedAccountToSet);
+          console.log("✅ SelectedAccount set to:", selectedAccountToSet);
+        } else {
+          // No saved data; use default accounts
+          await AsyncStorage.setItem('accountsData', JSON.stringify(accounts));
+          setSelectedAccount(accounts[0]);
+          console.log("🆕 No accounts saved yet. Using default account:", accounts[0]);
+        }
+      } catch (err) {
+        console.error('Error loading accounts:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    loadAccounts();
+  }, []);
+   
+  // Render Deposit Status Screen
+  if (currentScreen === 'depositStatus') {
+    console.log('Rendering DepositStatus with amount:', screenParams.amount);
+    return (
+      <DepositStatus 
+        amount={screenParams.amount || 0} 
+        onNavigate={handleNavigation} 
+      />
+    );
+  }
+  
+  // Render Deposit Screen
+  if (currentScreen === 'deposit') {
+    if (!selectedAccount) {
+      console.log('No selected account, cannot render Deposit');
+      return (
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text>No account selected. Please select an account first.</Text>
+          <TouchableOpacity 
+            style={{ marginTop: 20, padding: 10, backgroundColor: '#FFD700', borderRadius: 5 }}
+            onPress={() => setCurrentScreen('home')}
+          >
+            <Text>Back to Home</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    
+    console.log('Rendering Deposit with account:', selectedAccount);
+    return (
+      <Deposit
+        key={`deposit-${selectedAccount.id}`}
+        onNavigate={handleNavigation}
+        selectedAccount={selectedAccount}
+        onDeposit={handleDeposit}
+      />
+    );
+  }
+  
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }  
+  
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -77,7 +171,7 @@ const [accountTab, setAccountTab] = useState('real');
               <View style={styles.notificationDot}></View>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity style={styles.headerButton} onPress={() => setShowAccountDialog(true)}>
             <Text style={styles.headerButtonText}>+</Text>
           </TouchableOpacity>
         </View>
@@ -98,7 +192,7 @@ const [accountTab, setAccountTab] = useState('real');
                   ? 'ZERO'
                   : selectedAccount.type}
                 </Text>
-                <Text style={styles.numberText}> # 269446202</Text>
+                <Text style={styles.accountNumber}>#23234567</Text>
               </Text>
               <View style={styles.accountTags}>
                 <View style={styles.tagMT5}>
@@ -120,7 +214,7 @@ const [accountTab, setAccountTab] = useState('real');
               <Text style={styles.chevron}>›</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.balanceText}>{selectedAccount.balance} INR</Text>
+          <Text style={styles.balanceText}>{parseFloat(selectedAccount.balance).toFixed(2)} INR</Text>
         <Modal
           visible={showAccountSwitcher}
           animationType="slide"
@@ -197,11 +291,24 @@ const [accountTab, setAccountTab] = useState('real');
           <AccountCard
             key={account.id}
             account={account}
-            isSelected={selectedAccount.id === account.id}
-            onSelect={() => {
-              setSelectedAccount(account);
+            isSelected={selectedAccount?.id === account.id}
+            onSelect={async () => {
+              try {
+                await AsyncStorage.setItem('selectedAccountId', account.id.toString()); // ✅ Save as string
+                const saved = await AsyncStorage.getItem('accountsData');
+                if (saved) {
+                  const parsed = JSON.parse(saved);
+                  const updatedAccount = parsed.find(acc => acc.id === account.id);
+                  setSelectedAccount(updatedAccount);
+                } else {
+                  setSelectedAccount(account);
+                }
+              } catch (e) {
+                console.error("Failed to select account", e);
+                setSelectedAccount(account);
+              }
               setShowAccountSwitcher(false);
-            }}
+            }}                                 
           />
         ))}
     </>
@@ -231,8 +338,14 @@ const [accountTab, setAccountTab] = useState('real');
 
           <TouchableOpacity 
             style={styles.actionButton}
-            onPress={() => props.onNavigate && props.onNavigate('deposit')}
-           >
+            onPress={() => {
+              if (!selectedAccount) {
+                Alert.alert('No Account', 'Please select an account first');
+                return;
+              }
+              handleNavigation('deposit');
+            }}
+          >
             <View style={styles.actionIconContainer}>
               <DepositIcon size={29} color="black" />
             </View>
@@ -449,6 +562,87 @@ const [accountTab, setAccountTab] = useState('real');
       />
     ))}
 </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Add Account Dialog */}
+      <Modal
+        visible={showAccountDialog}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowAccountDialog(false)}
+      >
+        <View style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0,0,0,0.3)'
+        }}>
+          <View style={{
+            backgroundColor: '#fff',
+            padding: 24,
+            borderRadius: 12,
+            width: '80%',
+            alignItems: 'center'
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Add Account Details</Text>
+            <TextInput
+              style={{
+                width: '100%',
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 6,
+                padding: 10,
+                marginBottom: 12
+              }}
+              placeholder="Name"
+              value={newName}
+              onChangeText={setNewName}
+            />
+            <TextInput
+              style={{
+                width: '100%',
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 6,
+                padding: 10,
+                marginBottom: 12
+              }}
+              placeholder="ID"
+              value={newId}
+              onChangeText={setNewId}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#FFD700',
+                padding: 10,
+                borderRadius: 6,
+                width: '100%',
+                alignItems: 'center',
+                marginTop: 8
+              }}
+              onPress={() => {
+                setAccounts(prev =>
+                  prev.map(acc =>
+                    acc.id === selectedAccount.id
+                      ? { ...acc, name: newName, customId: newId }
+                      : acc
+                  )
+                );
+                setSelectedAccount({
+                  ...selectedAccount,
+                  name: newName,
+                  customId: newId
+                });
+                setShowAccountDialog(false);
+                setNewName('');
+                setNewId('');
+              }}
+            >
+              <Text style={{ fontWeight: 'bold' }}>Continue</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
@@ -778,9 +972,9 @@ tabButtonActive: {
   },
   bottomLine: {
   height: 2,
-  backgroundColor: '#EAEAEA',     // ✅ For testing visibility
+  backgroundColor: '#EAEAEA',     
   marginHorizontal: 15,
-  marginTop: -1,               // Optional alignment tweak
+  marginTop: -1,              
 },
 
   emptyStateContainer: {
@@ -894,53 +1088,24 @@ function AccountCard({ account, isSelected, onSelect }) {
       onPress={onSelect}
       activeOpacity={0.8}
     >
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 10,
-          marginTop: 5,
-        }}
-      >
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginTop: 5 }}>
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#222' }}>
           {displayType}
         </Text>
         <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#222' }}>
-          {account.balance}  INR
+          {account.balance} INR
         </Text>
       </View>
-
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <View
-          style={{
-            backgroundColor: '#E0F7FA',
-            borderRadius: 6,
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            marginRight: 6,
-          }}
-        >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ backgroundColor: '#E0F7FA', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginRight: 6 }}>
           <Text style={{ color: '#009688', fontSize: 13 }}>MT5</Text>
         </View>
-        <View
-          style={{
-            backgroundColor: '#E0F7FA',
-            borderRadius: 6,
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            marginRight: 6,
-          }}
-        >
+        <View style={{ backgroundColor: '#E0F7FA', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginRight: 6 }}>
           <Text style={{ color: '#009688', fontSize: 13 }}>{displayType}</Text>
         </View>
-        <Text style={{ color: '#666', fontSize: 13 }}># {account.number}</Text>
+        <Text style={{ color: '#666', fontSize: 13 }}>
+          # {account.name && account.customId ? `${account.name} ${account.customId}` : account.number}
+        </Text>
       </View>
     </TouchableOpacity>
   );

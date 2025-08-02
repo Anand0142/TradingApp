@@ -49,7 +49,7 @@ const DepositStatus = ({ onNavigate, onDepositSuccess, amount = '123.00' }) => {
           </View>
           <View style={styles.statusRow}>
             <Text style={styles.statusLabel}>Transaction amount</Text>
-            <Text style={styles.amountText}>{formattedAmount} USD</Text>
+            <Text style={styles.amountText}>{formattedAmount} INR</Text>
           </View>
         </View>
 

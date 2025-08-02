@@ -11,26 +11,52 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-const Deposit = ({ onNavigate, onDeposit }) => {
+
+
+const Deposit = ({ onNavigate, onDeposit, selectedAccount }) => {
   const [amount, setAmount] = useState('');
 
+console.log('SelectedAccount:', selectedAccount);
+
+
   const handleContinue = async () => {
+    if (!selectedAccount || !selectedAccount.id) {
+      Alert.alert('No Account Selected', 'Please select an account before depositing.');
+      return;
+    }    
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
       Alert.alert('Invalid Amount', 'Please enter at least 1 rupee to proceed.');
-    } else {
-      try {
-        const existing = await AsyncStorage.getItem('userBalance');
-        const current = parseFloat(existing) || 0;
-        const updated = current + numericAmount;
-        await AsyncStorage.setItem('userBalance', updated.toString());
-  
-        onNavigate && onNavigate('depositStatus', { amount: numericAmount });
-      } catch (err) {
-        console.error('Failed to update balance:', err);
-      }
+      return;
     }
-  };  
+
+    try {
+      const saved = await AsyncStorage.getItem('accountsData');
+      let accountsArray = JSON.parse(saved) || [];
+  
+      const updatedAccounts = accountsArray.map(acc => {
+        if (acc.id === selectedAccount.id) {
+          return {
+            ...acc,
+            balance: parseFloat(acc.balance) + numericAmount
+          };
+        }
+        return acc;
+      });
+  
+      // Save updated accounts
+      await AsyncStorage.setItem('accountsData', JSON.stringify(updatedAccounts));
+  
+      // Update state
+      const updatedAccount = updatedAccounts.find(a => a.id === selectedAccount.id);
+      onDeposit && onDeposit(updatedAccounts, updatedAccount);
+  
+      // Go to status screen
+      onNavigate && onNavigate('depositStatus', { amount: numericAmount });
+    } catch (err) {
+      console.error('Deposit error:', err);
+    }
+  };
 
   return (
     <View style={styles.container}>
