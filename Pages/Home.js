@@ -10,6 +10,10 @@ import Deposit from './Deposit';
 import DepositStatus from './depositStatus';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
+import RemixIcon from 'react-native-remix-icon';
+
+
+
 
 const COLORS = {
   primaryBackground: '#F0F2F6',
@@ -31,6 +35,7 @@ export default function Home(props) {
   const [showAccountDialog, setShowAccountDialog] = useState(false);
   const [newName, setNewName] = useState('');
   const [newId, setNewId] = useState('');
+  const [activeTab, setActiveTab] = useState('open'); // 'open', 'pending', 'closed'
 
   const [accounts, setAccounts] = useState([
     {
@@ -73,7 +78,7 @@ export default function Home(props) {
     const loadAccounts = async () => {
       try {
         const savedAccounts = await AsyncStorage.getItem('accountsData');
-        const savedSelectedId = await AsyncStorage.getItem('selectedAccountId'); // ✅ get saved id
+        const savedSelectedId = await AsyncStorage.getItem('selectedAccountId'); 
   
         if (savedAccounts) {
           const parsed = JSON.parse(savedAccounts);
@@ -82,7 +87,6 @@ export default function Home(props) {
           let selectedAccountToSet = null;
   
           if (savedSelectedId) {
-            // 🔁 match saved ID with parsed accounts
             selectedAccountToSet = parsed.find(acc => acc.id === Number(savedSelectedId));
           }
   
@@ -92,12 +96,12 @@ export default function Home(props) {
           }
   
           setSelectedAccount(selectedAccountToSet);
-          console.log("✅ SelectedAccount set to:", selectedAccountToSet);
+          console.log(" SelectedAccount set to:", selectedAccountToSet);
         } else {
           // No saved data; use default accounts
           await AsyncStorage.setItem('accountsData', JSON.stringify(accounts));
           setSelectedAccount(accounts[0]);
-          console.log("🆕 No accounts saved yet. Using default account:", accounts[0]);
+          console.log(" No accounts saved yet. Using default account:", accounts[0]);
         }
       } catch (err) {
         console.error('Error loading accounts:', err);
@@ -204,7 +208,7 @@ export default function Home(props) {
               style={styles.chevronCircle}
               onPress={() => setShowAccountSwitcher(true)}
             >
-              <Text style={styles.chevron}>›</Text>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#000" />
             </TouchableOpacity>
           </View>
           <Text style={styles.balanceText}>{parseFloat(selectedAccount.balance).toFixed(2)} INR</Text>
@@ -362,28 +366,42 @@ export default function Home(props) {
 
         {/* Tabs */}
         <View style={styles.tabs}>
-  <View style={styles.tabsRow}>
-    <TouchableOpacity style={styles.tabButtonActive}>
-      <Text style={styles.tabTextActive}>Open</Text>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.tabButton}>
-      <Text style={styles.tabText}>Pending</Text>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.tabButton}>
-      <Text style={styles.tabText}>Closed</Text>
-    </TouchableOpacity>
-            <TouchableOpacity style={styles.refreshButton}>
-              <View style={styles.arrowContainer}>
-                <Text style={styles.arrowright}>↑</Text>
-                <Text style={styles.arrow}>↓</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.tabsRow}>
+  <TouchableOpacity 
+    style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
+    onPress={() => setActiveTab('open')}
+  >
+    <Text style={[styles.tabText, activeTab === 'open' && styles.tabTextActive]}>Open</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity 
+    style={[styles.tabButton, activeTab === 'pending' && styles.tabButtonActive]}
+    onPress={() => setActiveTab('pending')}
+  >
+    <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>Pending</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity 
+    style={[styles.tabButton, activeTab === 'closed' && styles.tabButtonActive]}
+    onPress={() => setActiveTab('closed')}
+  >
+    <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Closed</Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity style={styles.refreshButton}>
+  <RemixIcon name="arrow-up-down-line" size={20} color="#777" />
+  </TouchableOpacity>
+</View>
+
           <View style={styles.bottomLine} />
         </View>
     <View style={styles.container1}>
-      {/* No open positions */}
-      <Text style={styles.statusText1}>No open positions</Text>
+      {/* Status text based on active tab */}
+      <Text style={styles.statusText1}>
+        {activeTab === 'open' && 'No open positions'}
+        {activeTab === 'pending' && 'No open positions'}
+        {activeTab === 'closed' && 'No open positions'}
+      </Text>
 
       {/* Trade box */}
       <View style={styles.tradeBox1}>
@@ -986,17 +1004,23 @@ tabsRow: {
 
 tabButton: {
   paddingVertical: 12,
-  paddingHorizontal: 5,
+  paddingHorizontal: 15,
   borderBottomWidth: 2,
   borderBottomColor: 'transparent',
   marginRight: 15,
 },
 
 tabButtonActive: {
-  paddingVertical: 12,
-  paddingHorizontal: 15,
-  borderBottomWidth: 2,
   borderBottomColor: 'black', // ✅ This is expected
+},
+tabText: {
+  color: '#777',               // gray text for inactive
+  fontWeight: 'normal',
+},
+
+tabTextActive: {
+  color: 'black',              // black text for active
+  fontWeight: '500',
 },
   refreshButton: {
     paddingVertical: 10,
