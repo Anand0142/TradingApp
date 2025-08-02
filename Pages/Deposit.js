@@ -8,21 +8,29 @@ import {
   Alert
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const Deposit = ({ onNavigate, onDeposit }) => {
   const [amount, setAmount] = useState('');
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
       Alert.alert('Invalid Amount', 'Please enter at least 1 rupee to proceed.');
     } else {
-      // Add deposit to balance
-      onDeposit && onDeposit(numericAmount);
-      // Navigate to DepositStatus with the amount
-      onNavigate && onNavigate('depositStatus', { amount: amount });
+      try {
+        const existing = await AsyncStorage.getItem('userBalance');
+        const current = parseFloat(existing) || 0;
+        const updated = current + numericAmount;
+        await AsyncStorage.setItem('userBalance', updated.toString());
+  
+        onNavigate && onNavigate('depositStatus', { amount: numericAmount });
+      } catch (err) {
+        console.error('Failed to update balance:', err);
+      }
     }
-  };
+  };  
 
   return (
     <View style={styles.container}>
@@ -46,10 +54,10 @@ const Deposit = ({ onNavigate, onDeposit }) => {
             onChangeText={setAmount}
             autoFocus
           />
-          <Text style={styles.currency}>USD</Text>
+          <Text style={styles.currency}>INR</Text>
         </View>
         <Text style={styles.limitText}>
-          0.00 – 10,000,000,000.00 USD
+          0.00 – 10,000,000,000.00 INR
         </Text>
       </View>
 
