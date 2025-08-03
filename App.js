@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Home from './Pages/Home';
 import Graph from './Pages/Graph';
 import Trade from './Pages/Trade';
@@ -10,9 +10,8 @@ import DepositStatus from './Pages/depositStatus';
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('home');
   const [currentParams, setCurrentParams] = useState({});
-  const [balance, setBalance] = useState(500.00); // Initial balance
+  const [balance, setBalance] = useState(500.00);
   
-  // Function to update balance
   const updateBalance = (amount) => {
     setBalance(prevBalance => prevBalance + parseFloat(amount));
   };
@@ -41,14 +40,14 @@ export default function App() {
           />
         );
       default:
-        return <Home onNavigate={setCurrentScreen} />;
+        return <Home onNavigate={handleNavigation} />;
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0D0F13' }}>
-      {renderScreen()}
+    <SafeAreaProvider>
       <StatusBar style="light" />
-    </SafeAreaView>
+      {renderScreen()}
+    </SafeAreaProvider>
   );
 }

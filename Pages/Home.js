@@ -1,5 +1,17 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, Modal, TouchableWithoutFeedback, TextInput } from 'react-native';
+import { 
+  Animated,
+  StyleSheet, 
+  Text, 
+  View, 
+  TouchableOpacity, 
+  ScrollView, 
+  Image, 
+  Modal, 
+  TouchableWithoutFeedback, 
+  TextInput, 
+  Dimensions 
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
@@ -11,10 +23,17 @@ import DepositStatus from './depositStatus';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import RemixIcon from 'react-native-remix-icon';
+import { 
+  moderateScale, 
+  verticalScale, 
+  responsiveButtonWidth as scale 
+} from '../utils/responsive';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Get window dimensions
+const { width } = Dimensions.get('window');
 
-
-
+// Colors
 const COLORS = {
   primaryBackground: '#F0F2F6',
   cardBackground: '#FFFFFF',
@@ -35,7 +54,9 @@ export default function Home(props) {
   const [showAccountDialog, setShowAccountDialog] = useState(false);
   const [newName, setNewName] = useState('');
   const [newId, setNewId] = useState('');
-  const [activeTab, setActiveTab] = useState('open'); // 'open', 'pending', 'closed'
+  const [activeTab, setActiveTab] = useState('open');
+  const insets = useSafeAreaInsets(); 
+  
 
   const [accounts, setAccounts] = useState([
     {
@@ -91,7 +112,6 @@ export default function Home(props) {
           }
   
           if (!selectedAccountToSet) {
-            // fallback to STANDARD or first account
             selectedAccountToSet = parsed.find(acc => acc.type === 'STANDARD') || parsed[0];
           }
   
@@ -159,11 +179,11 @@ export default function Home(props) {
       </View>
     );
   }  
-  
+
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header,{ paddingTop: insets.top }]}>
         <Text style={styles.headerText}>Accounts</Text>
         <View style={styles.headerIconsContainer}>
           <View style={styles.topIcons}>
@@ -181,7 +201,7 @@ export default function Home(props) {
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: insets.bottom + verticalScale(20) }}>
         {/* Account Card */}
         <View style={styles.accountCard}>
           <View style={styles.accountHeader}>
@@ -291,7 +311,7 @@ export default function Home(props) {
             isSelected={selectedAccount?.id === account.id}
             onSelect={async () => {
               try {
-                await AsyncStorage.setItem('selectedAccountId', account.id.toString()); // ✅ Save as string
+                await AsyncStorage.setItem('selectedAccountId', account.id.toString()); // Save as string
                 const saved = await AsyncStorage.getItem('accountsData');
                 if (saved) {
                   const parsed = JSON.parse(saved);
@@ -405,12 +425,12 @@ export default function Home(props) {
 
       {/* Trade box */}
       <View style={styles.tradeBox1}>
-        <View style={{ position: 'relative', width: 30, height: 30 }}>
+        <View style={{ position: 'relative', width: moderateScale(  30), height: moderateScale(30) }}>
             <Image 
               source={require('../assets/eng.png')} 
               style={{
-              width: 24,
-              height: 24,
+              width: moderateScale(24),
+              height: moderateScale(24),
               position: 'absolute',
               top: 0,
               left: 0,
@@ -422,8 +442,8 @@ export default function Home(props) {
             <Image 
               source={require('../assets/usd.png')} 
               style={{
-              width: 24,
-              height: 24,
+              width: moderateScale(24),
+              height: moderateScale(24),
               position: 'absolute',
               bottom: 0,
               right: 0,
@@ -444,7 +464,7 @@ export default function Home(props) {
     </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer,{ paddingBottom: insets.bottom }]}>
         <TouchableOpacity style={styles.footerButton} onPress={() => onNavigate && onNavigate('home')}>
             <Icon name="view-dashboard-outline" size={24} color="black" />
             <Text style={styles.footerTextActive}>Accounts</Text>
@@ -713,43 +733,43 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'white',
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 20,
-    height: 400, // Increased height
-    paddingBottom: 20,
+    borderTopLeftRadius: moderateScale(25),
+    borderTopRightRadius: moderateScale(20),
+    height: verticalScale(400),
+    paddingBottom: moderateScale(20),
   },
   switcherHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: moderateScale(20),
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   switcherTitle: {
-    fontSize: 25,
+    fontSize: moderateScale(25),
     fontWeight: 'bold',
-    marginRight: 20,
+    marginRight: moderateScale(20),
   },
   closeButton: {
-    padding: 5,
+    padding: moderateScale(5),
   },
   closeButtonText: {
-    fontSize: 24,
+    fontSize: moderateScale(24),
     color: '#666',
-    marginleft: 25,
+    marginLeft: moderateScale(25),
   },
   accountsList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: moderateScale(16),
   },
   accountOption: {
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
+    padding: moderateScale(15),
+    borderRadius: moderateScale(10),
+    marginVertical: moderateScale(10),
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#eee',
-    minHeight: 64,
+    minHeight: moderateScale(64),
   },
   selectedAccountOption: {
     backgroundColor: 'white',
@@ -783,15 +803,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 5,
+    paddingHorizontal: moderateScale(5),
     backgroundColor: '#F4F4F4',
-    paddingTop: 3,
-    marginBottom: 15,
-    marginTop: 8,
+    marginBottom: verticalScale(15),
+    marginTop: verticalScale(8),
   },
   headerText: {
     color: COLORS.textBlack,
-    fontSize: 35,
+    fontSize: moderateScale(33),
     fontWeight: 'bold',
     paddingTop: 63,
     marginLeft:20,
@@ -825,13 +844,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   iconButton: {
-    width: 20,
-    height: 40,
+    width: moderateScale(20),
+    height: moderateScale(40),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-    marginRight:22,
-    paddingVertical: 4,
+    marginBottom: moderateScale(12),
+    marginRight:moderateScale(22),
+    paddingVertical: moderateScale(4),
   },
   numberText: {
     fontSize: 14,
@@ -864,15 +883,15 @@ const styles = StyleSheet.create({
   },
   accountCard: { 
     backgroundColor: '#fff',
-   borderRadius: 15,
-   padding: 15, // Reduced from 20
-   marginBottom: 15, // Reduced from 20
+    borderRadius: moderateScale(15),
+    padding: moderateScale(15),
+    marginBottom: verticalScale(15),
+    marginHorizontal: moderateScale(15),
    shadowColor: '#000',
    shadowOffset: { width: 0, height: 2 },
    shadowOpacity: 0.05,
    shadowRadius: 2,
    elevation: 2,
-   marginHorizontal: 15,
    },
   accountHeader: {
     flexDirection: 'row',
@@ -884,10 +903,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   accountNumber: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     color: 'black',
     fontWeight: '500',
-    marginBottom: 10,
+    marginBottom: moderateScale(10),
   },
   accountTags: {
     flexDirection: 'row',
@@ -932,34 +951,37 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   balanceText: {
-    fontSize: 30,
+    fontSize: moderateScale(30),
     fontWeight: 'bold',
     color: COLORS.textBlack,
     marginVertical: 5,
   },
   accountActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    marginRight: 6,
+    gap:moderateScale(30),
+    justifyContent: 'center',
+    marginTop: verticalScale(10),
+    paddingHorizontal:moderateScale(10),
   },
   actionButton: {
     alignItems: 'center',
-    width: '22%',
+    maxWidth: scale(80),
+    flex:1,
   },
   actionButtonTrade: {
     alignItems: 'center',
-    width: '22%',
+    width: scale(65),
+    paddingHorizontal: moderateScale(5),
   },
   tradeIconContainer: {
     backgroundColor: '#FFD700',
-    width: 50,
-    height: 50,
-    borderRadius: 30,
+    width: scale(45),
+    height: scale(45),
+    borderRadius: scale(30),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
-    marginRight:2,
+    marginBottom:verticalScale(8),
+    alignSelf:'center',
   },
   tradeIcon: {
     fontSize: 22,
@@ -973,14 +995,13 @@ const styles = StyleSheet.create({
   },
   actionIconContainer: {
     backgroundColor: '#ECECED',
-    width: 50,
-    height: 50,
-    borderRadius: 30,
+    width: scale(45),
+    height: scale(45),
+    borderRadius: scale(30),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
-    borderWidth: 0,
-    borderColor: 'white',
+    marginBottom:verticalScale(8),
+    alignSelf:'center',
   },
   actionIcon: {
     fontSize: 22,
@@ -993,7 +1014,7 @@ const styles = StyleSheet.create({
   },
   tabs: {
   marginTop: 20,
-  backgroundColor: '#f5f5f5', // Optional
+  backgroundColor: '#f5f5f5', 
 },
 
 tabsRow: {
@@ -1011,15 +1032,15 @@ tabButton: {
 },
 
 tabButtonActive: {
-  borderBottomColor: 'black', // ✅ This is expected
+  borderBottomColor: 'black', 
 },
 tabText: {
-  color: '#777',               // gray text for inactive
+  color: '#777',               
   fontWeight: 'normal',
 },
 
 tabTextActive: {
-  color: 'black',              // black text for active
+  color: 'black',             
   fontWeight: '500',
 },
   refreshButton: {
@@ -1049,14 +1070,14 @@ tabTextActive: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#fff',
-    paddingVertical: 10,
+    paddingTop: verticalScale(10),
     borderTopWidth: 0.2,
     borderTopColor: '#BFC0BF',
   },
   footerButton: {
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(12),
   },
   footerButtonActive: {
     alignItems: 'center',
@@ -1077,10 +1098,10 @@ tabTextActive: {
     fontSize: 12,
   },
   container1: {
-    padding: 16,
+    padding: moderateScale(16),
     backgroundColor: '#F4F4F4',
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: verticalScale(15),
   },
   statusText1: {
     fontSize: 16,
@@ -1092,11 +1113,11 @@ tabTextActive: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ECECEC',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 17,
-    width: 405,
-    height: 50,
+    padding: moderateScale(10),
+    borderRadius: moderateScale(10),
+    marginBottom: moderateScale(17),
+    width: '95%',
+    height: verticalScale(50),  
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1141,27 +1162,27 @@ function AccountCard({ account, isSelected, onSelect }) {
       style={[
         styles.accountOption,
         isSelected && styles.selectedAccountOption,
-        { flexDirection: 'column', padding: 12 },
+        { flexDirection: 'column', padding: moderateScale(12) },
       ]}
       onPress={onSelect}
       activeOpacity={0.8}
     >
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginTop: 5 }}>
-        <Text style={{ fontSize: 15, fontWeight: '600', color: '#222' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(10), marginTop: moderateScale(5) }}>
+        <Text style={{ fontSize: moderateScale(15), fontWeight: '600', color: '#222' }}>
           {account.name?.trim() || displayType}
         </Text>
-        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#222' }}>
+        <Text style={{ fontSize: moderateScale(16), fontWeight: 'bold', color: '#222' }}>
           {account.balance} INR
         </Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ backgroundColor: '#E0F7FA', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginRight: 6 }}>
-          <Text style={{ color: '#009688', fontSize: 13 }}>MT5</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap:moderateScale(8) }}>
+        <View style={{ backgroundColor: '#ECECED', borderRadius:moderateScale(6), paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(2), marginRight: moderateScale(6) }}>
+          <Text style={{ color: 'black', fontSize:moderateScale(13) }}>MT5</Text>
         </View>
-        <View style={{ backgroundColor: '#E0F7FA', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginRight: 6 }}>
-          <Text style={{ color: '#009688', fontSize: 13 }}>{displayType}</Text>
+        <View style={{ backgroundColor: '#ECECED', borderRadius: moderateScale(6), paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(2), marginRight: moderateScale(6) }}>
+          <Text style={{ color: 'black', fontSize: moderateScale(13) }}>{displayType}</Text>
         </View>
-        <Text style={{ color: '#666', fontSize: 13 }}>
+        <Text style={{ color: '#666', fontSize: moderateScale(13) }}>
           #{account.customId?.trim() || account.number}
         </Text>
       </View>
