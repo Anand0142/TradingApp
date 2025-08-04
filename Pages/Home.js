@@ -10,8 +10,14 @@ import {
   Modal, 
   TouchableWithoutFeedback, 
   TextInput, 
-  Dimensions 
+  Dimensions,
+  Alert,
+  TouchableWithoutFeedback as RNTouchableWithoutFeedback,
+  ActivityIndicator
 } from 'react-native';
+import { signOut } from 'firebase/auth';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../components/firebase';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
@@ -49,15 +55,31 @@ const COLORS = {
   redDot: '#FF0000',
 };
 export default function Home(props) {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
   const [accountTab, setAccountTab] = useState('real');
   const [showAccountDialog, setShowAccountDialog] = useState(false);
   const [newName, setNewName] = useState('');
   const [newId, setNewId] = useState('');
   const [activeTab, setActiveTab] = useState('open');
-  const insets = useSafeAreaInsets(); 
-  
+  const insets = useSafeAreaInsets();
+  const scrollY = new Animated.Value(0);
 
+// Header will collapse from 150px to 50px
+const headerHeight = scrollY.interpolate({
+  inputRange: [0, 100],
+  outputRange: [150, 50],
+  extrapolate: 'clamp'
+});
+
+// Header will fade out as you scroll
+const headerOpacity = scrollY.interpolate({
+  inputRange: [0, 80],
+  outputRange: [1, 0],
+  extrapolate: 'clamp'
+}); 
+  
   const [accounts, setAccounts] = useState([
     {
       id: 1,
@@ -79,10 +101,10 @@ export default function Home(props) {
     },
   ]);
   
-  const [selectedAccount, setSelectedAccount] = useState(undefined); 
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedAccount, setSelectedAccount] = useState(null); 
   const [currentScreen, setCurrentScreen] = useState('home');
   const [screenParams, setScreenParams] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleNavigation = (screen, params = {}) => {
     console.log('Navigating to:', screen, 'with params:', params);
@@ -133,6 +155,15 @@ export default function Home(props) {
     loadAccounts();
   }, []);
    
+  // Show loading state until selectedAccount is available
+  if (isLoading || !selectedAccount) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Loading account data...</Text>
+      </View>
+    );
+  }
+
   // Render Deposit Status Screen
   if (currentScreen === 'depositStatus') {
     console.log('Rendering DepositStatus with amount:', screenParams.amount);
@@ -172,13 +203,7 @@ export default function Home(props) {
     );
   }
   
-  if (isLoading) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }  
+
 
   return (
     <View style={styles.container}>
@@ -207,20 +232,24 @@ export default function Home(props) {
           <View style={styles.accountHeader}>
             <View style={styles.accountDetails}>
               <Text>
-                <Text style={styles.accountNumber}>{selectedAccount.name?.trim() || selectedAccount.name}
+                <Text style={styles.accountNumber}>
+                  {accounts.find(acc => acc.number === selectedAccount.number)?.name?.trim() || ''}
                 </Text>
-                <Text style={styles.accountNumber}>#{selectedAccount.customId?.trim() || selectedAccount.number}</Text>
+                <Text style={styles.accountNumber}>
+                  #{accounts.find(acc => acc.number === selectedAccount.number)?.customId?.trim() || selectedAccount.number}
+                </Text>
               </Text>
               <View style={styles.accountTags}>
                 <View style={styles.tagMT5}>
                   <Text style={styles.tagText}>MT5</Text>
                 </View>
-                <View style={styles.tagStandard}>
-                  <Text style={styles.tagText}>Standard</Text>
+                <View style={selectedAccount.isDemo ? styles.tagDemo : styles.tagStandard}>
+                  <Text style={styles.tagText}>
+                    {selectedAccount.isDemo ? 'Zero' : 'Standard'}
+                  </Text>
                 </View>
                 <View style={styles.tagDemo}>
-                  <Text style={styles.tagText}>Real
-                  </Text>
+                  <Text style={styles.tagText}>Real</Text>
                 </View>
               </View>
             </View>
@@ -308,6 +337,7 @@ export default function Home(props) {
           <AccountCard
             key={account.id}
             account={account}
+            accounts={accounts}
             isSelected={selectedAccount?.id === account.id}
             onSelect={async () => {
               try {
@@ -386,6 +416,7 @@ export default function Home(props) {
 
         {/* Tabs */}
         <View style={styles.tabs}>
+        <View style={[styles.stickyTabs, { top: headerHeight }]}>
         <View style={styles.tabsRow}>
   <TouchableOpacity 
     style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
@@ -415,6 +446,7 @@ export default function Home(props) {
 
           <View style={styles.bottomLine} />
         </View>
+      </View>
     <View style={styles.container1}>
       {/* Status text based on active tab */}
       <Text style={styles.statusText1}>
@@ -422,7 +454,6 @@ export default function Home(props) {
         {activeTab === 'pending' && 'No open positions'}
         {activeTab === 'closed' && 'No open positions'}
       </Text>
-
       {/* Trade box */}
       <View style={styles.tradeBox1}>
         <View style={{ position: 'relative', width: moderateScale(  30), height: moderateScale(30) }}>
@@ -487,10 +518,86 @@ export default function Home(props) {
         </View>
         <Text style={styles.footerText}>Performance</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.footerButton}>
-        <Icon name="account-circle-outline" size={24} color="#888888" />
-        <Text style={styles.footerText}>Profile</Text>
-      </TouchableOpacity>
+      <View style={styles.profileContainer}>
+        <TouchableOpacity 
+          style={styles.footerButton}
+          onPress={() => setShowProfileMenu(!showProfileMenu)}
+        >
+          <Icon name="account-circle-outline" size={24} color="#888888" />
+          <Text style={styles.footerText}>Profile</Text>
+        </TouchableOpacity>
+        
+        {showProfileMenu && (
+          <RNTouchableWithoutFeedback onPress={() => setShowProfileMenu(false)}>
+            <View style={styles.profileMenuOverlay}>
+              <View style={styles.profileMenu}>
+                {/* Close button */}
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setShowProfileMenu(false)}
+                >
+                  <Icon name="close" size={20} color="#000000" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileMenuItem}
+                  onPress={() => {
+                    Alert.alert(
+                      "Logout",
+                      "Are you sure you want to logout?",
+                      [
+                        {
+                          text: "No",
+                          style: "cancel",
+                          onPress: () => console.log("Logout cancelled")
+                        },
+                        { 
+                          text: "Yes",
+                          style: "default",
+                          onPress: async () => {
+                            try {
+                              setIsLoggingOut(true);
+                              const user = auth.currentUser;
+                              
+                              if (user) {
+                                // Update user status in Firestore
+                                const userRef = doc(db, "users", user.uid);
+                                await updateDoc(userRef, {
+                                  isLoggedIn: false,
+                                  lastLogout: serverTimestamp()
+                                });
+                                
+                                // Sign out from Firebase Auth
+                                await signOut(auth);
+                                
+                                // Navigate to Login screen
+                                props.navigation.replace('Login');
+                              }
+                            } catch (error) {
+                              console.error("Logout error:", error);
+                              Alert.alert("Logout Error", "Failed to sign out. Please try again.");
+                            } finally {
+                              setIsLoggingOut(false);
+                            }
+                          }
+                        }
+                      ],
+                      { cancelable: true }
+                    );
+                    setShowProfileMenu(false);
+                  }}
+                >
+                  <Icon name="logout" size={20} color="#000000" paddingTop={10} style={styles.profileMenuIcon} />
+                  <Text style={[styles.profileMenuText, {color: '#000000'}]}>
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </Text>
+                  {isLoggingOut && <ActivityIndicator size="small" color="#000000" style={{marginLeft: 10}} />}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </RNTouchableWithoutFeedback>
+        )}
+      </View>
       </View>
 
       <StatusBar style="light" />
@@ -585,6 +692,7 @@ export default function Home(props) {
       <AccountCard
         key={account.id}
         account={account}
+        accounts={accounts}
         isSelected={selectedAccount.id === account.id}
         onSelect={() => {
           setSelectedAccount(account);
@@ -667,50 +775,39 @@ export default function Home(props) {
                 marginTop: 8
               }}
               onPress={async () => {
-                if (!newName.trim() || !newId.trim()) {
-                  Alert.alert('Error', 'Please enter both name and ID');
-                  return;
-                }
+  if (!newName.trim() || !newId.trim()) {
+    Alert.alert('Error', 'Please enter both name and ID');
+    return;
+  }
 
-                try {
-                  // Update the selected account in the list
-                  const updatedAccounts = accounts.map(acc =>
-                    acc.id === selectedAccount.id
-                      ? { 
-                          ...acc, 
-                          name: newName.trim(), 
-                          customId: newId.trim(),
-                          // Preserve other account properties
-                          balance: acc.balance,
-                          number: acc.number,
-                          type: acc.type,
-                          isDemo: acc.isDemo
-                        }
-                      : acc
-                  );
-              
-                  // Save updated accounts to AsyncStorage
-                  await AsyncStorage.setItem('accountsData', JSON.stringify(updatedAccounts));
-              
-                  // Update state with the modified account
-                  const updatedAccount = {
-                    ...selectedAccount,
-                    name: newName.trim(),
-                    customId: newId.trim()
-                  };
-                  
-                  setAccounts(updatedAccounts);
-                  setSelectedAccount(updatedAccount);
-              
-                  // Close dialog and clear inputs
-                  setShowAccountDialog(false);
-                  setNewName('');
-                  setNewId('');
-                } catch (err) {
-                  console.error('Failed to update account:', err);
-                  Alert.alert('Error', 'Failed to save account details');
-                }
-              }}              
+  try {
+    // Update BOTH Standard and Zero accounts with the same number
+    const updatedAccounts = accounts.map(acc => {
+      if (acc.number === selectedAccount.number) {
+        return {
+          ...acc,
+          name: newName.trim(),
+          customId: newId.trim(),
+        };
+      }
+      return acc;
+    });
+
+    await AsyncStorage.setItem('accountsData', JSON.stringify(updatedAccounts));
+    setAccounts(updatedAccounts);
+
+    // Always select the account type the user was editing
+    const updatedSelected = updatedAccounts.find(acc => acc.id === selectedAccount.id);
+    setSelectedAccount(updatedSelected);
+
+    setShowAccountDialog(false);
+    setNewName('');
+    setNewId('');
+  } catch (err) {
+    console.error('Failed to update account:', err);
+    Alert.alert('Error', 'Failed to save account details');
+  }
+}}
             >
               <Text style={{ fontWeight: 'bold' }}>Continue</Text>
             </TouchableOpacity>
@@ -1076,13 +1173,62 @@ tabTextActive: {
   },
   footerButton: {
     alignItems: 'center',
-    paddingVertical: verticalScale(8),
-    paddingHorizontal: scale(12),
+    flex: 1,
+  },
+  profileContainer: {
+    position: 'relative',
+    flex: 1,
+  },
+  profileMenuOverlay: {
+    position: 'absolute',
+    top: 20,  // Adjust this to position the menu above the button
+    right: 20,
+    zIndex: 1000,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: -5,
+    right: 5,
+    width: 24,
+    height: 24,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    marginTop: 10,
+  },
+  profileMenu: {
+    position: 'relative',
+    right: 10,
+    bottom: 60,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 10,
+    width: 144,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1000,
+  },
+  profileMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 12, // Add some top margin to account for the close button
+  },
+  profileMenuIcon: {
+    marginRight: 10,
+  },
+  profileMenuText: {
+    fontSize: 16.5,
+    color: '#FF3B30',
   },
   footerButtonActive: {
     alignItems: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: scale(12),
   },
   footerIcon: {
     color: '#888',
@@ -1154,8 +1300,17 @@ tabTextActive: {
   },
 });
 
-function AccountCard({ account, isSelected, onSelect }) {
-  const displayType = account.isDemo ? 'Zero' : 'Standard';
+function AccountCard({ account, accounts = [], isSelected, onSelect }) {
+  if (!account) return null;
+
+  // Find paired account (other type with same number)
+  const pairedAccount = Array.isArray(accounts)
+    ? accounts.find(acc => acc && acc.number === account.number && acc.id !== account.id)
+    : null;
+
+  // Use synced name/id from either account
+  const displayName = account.name?.trim() || pairedAccount?.name?.trim() || '';
+  const displayId = account.customId?.trim() || pairedAccount?.customId?.trim() || account.number;
 
   return (
     <TouchableOpacity
@@ -1167,23 +1322,63 @@ function AccountCard({ account, isSelected, onSelect }) {
       onPress={onSelect}
       activeOpacity={0.8}
     >
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(10), marginTop: moderateScale(5) }}>
-        <Text style={{ fontSize: moderateScale(15), fontWeight: '600', color: '#222' }}>
-          {account.name?.trim() || displayType}
+      <View style={{ 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: moderateScale(10), 
+        marginTop: moderateScale(5) 
+      }}>
+        <Text style={{ 
+          fontSize: moderateScale(15), 
+          fontWeight: '600', 
+          color: '#222',
+          textTransform: 'uppercase'
+        }}>
+          {account.isDemo ? 'ZERO' : 'STANDARD'}
         </Text>
-        <Text style={{ fontSize: moderateScale(16), fontWeight: 'bold', color: '#222' }}>
-          {account.balance} INR
+        <Text style={{ 
+          fontSize: moderateScale(16), 
+          fontWeight: 'bold', 
+          color: '#222' 
+        }}>
+          {parseFloat(account.balance || 0).toFixed(2)} INR
         </Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap:moderateScale(8) }}>
-        <View style={{ backgroundColor: '#ECECED', borderRadius:moderateScale(6), paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(2), marginRight: moderateScale(6) }}>
-          <Text style={{ color: 'black', fontSize:moderateScale(13) }}>MT5</Text>
+      <View style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        gap: moderateScale(8) 
+      }}>
+        <View style={{ 
+          backgroundColor: '#ECECED', 
+          borderRadius: moderateScale(6), 
+          paddingHorizontal: moderateScale(8), 
+          paddingVertical: moderateScale(2), 
+          marginRight: moderateScale(6) 
+        }}>
+          <Text style={{ color: 'black', fontSize: moderateScale(13) }}>MT5</Text>
         </View>
-        <View style={{ backgroundColor: '#ECECED', borderRadius: moderateScale(6), paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(2), marginRight: moderateScale(6) }}>
-          <Text style={{ color: 'black', fontSize: moderateScale(13) }}>{displayType}</Text>
+        <View style={{ 
+          backgroundColor: '#ECECED', 
+          borderRadius: moderateScale(6), 
+          paddingHorizontal: moderateScale(8), 
+          paddingVertical: moderateScale(2), 
+          marginRight: moderateScale(6) 
+        }}>
+          <Text style={{ 
+            color: 'black', 
+            fontSize: moderateScale(13),
+            textTransform: 'capitalize' 
+          }}>
+            {account.isDemo ? 'Zero' : 'Standard'}
+          </Text>
         </View>
-        <Text style={{ color: '#666', fontSize: moderateScale(13) }}>
-          #{account.customId?.trim() || account.number}
+        <Text style={{ 
+          color: '#666', 
+          fontSize: moderateScale(13) 
+        }}>
+          #{displayId}
         </Text>
       </View>
     </TouchableOpacity>
