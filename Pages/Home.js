@@ -376,7 +376,10 @@ const headerOpacity = scrollY.interpolate({
   </View>
 </Modal>
         <View style={styles.accountActions}>
-          <TouchableOpacity style={styles.actionButtonTrade} onPress={() => props.onNavigate && props.onNavigate('trade')}>
+          <TouchableOpacity 
+            style={styles.actionButtonTrade} 
+            onPress={() => props.navigation.navigate('Trade')}
+          >
             <View style={styles.tradeIconContainer}>
               <TradeIcon size={29} color="black" />
             </View>
@@ -496,12 +499,23 @@ const headerOpacity = scrollY.interpolate({
 
       {/* Footer */}
       <View style={[styles.footer,{ paddingBottom: insets.bottom }]}>
-        <TouchableOpacity style={styles.footerButton} onPress={() => onNavigate && onNavigate('home')}>
-            <Icon name="view-dashboard-outline" size={24} color="black" />
-            <Text style={styles.footerTextActive}>Accounts</Text>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => {
+            // Simple navigation without checking current route
+            if (props.navigation) {
+              props.navigation.navigate('Home');
+            }
+          }}
+        >
+          <Icon name="view-dashboard-outline" size={24} color="black" />
+          <Text style={styles.footerTextActive}>Accounts</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('trade')}>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => props.navigation.navigate('Trade')}
+        >
           <View style={{marginBottom: 4}}>
             <TradeIcon size={24} color="#888" />
           </View>
@@ -512,7 +526,10 @@ const headerOpacity = scrollY.interpolate({
         <Icon name="web" size={24} color="#888888" />
         <Text style={styles.footerText}>Insights</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('graph')}>
+      <TouchableOpacity 
+        style={styles.footerButton} 
+        onPress={() => props.navigation && props.navigation.navigate('Graph')}
+      >
         <View style={{marginBottom: 4}}>
           <MaterialIcons name="signal-cellular-alt" size={24} color="#888" />
         </View>

@@ -13,15 +13,19 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
 import { Svg, Line, Polyline } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-
-const TradeScreen = ({ onNavigate }) => {
+const TradeScreen = (props) => {
+  const insets = useSafeAreaInsets();
+  const [showProfileMenu, setShowProfileMenu] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const { onNavigate } = props;
   const handleTradePress = (symbol) => {
     onNavigate && onNavigate('graph', { symbol });
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#f4f4f4' }}>
       
       {/* Fixed Top Section */}
       <View>
@@ -32,7 +36,7 @@ const TradeScreen = ({ onNavigate }) => {
               <Text style={styles.demoText}>Demo</Text>
             </View>
             <Text style={styles.balanceAmount}>500.00 USD</Text>
-            <MaterialCommunityIcons name="dots-vertical" size={18} color="#999" />
+            <MaterialCommunityIcons name="dots-vertical" size={18} color="black" />
           </View>
         </View>
 
@@ -40,7 +44,7 @@ const TradeScreen = ({ onNavigate }) => {
         <View style={styles.tradeHeader}>
           <Text style={styles.tradeTitle}>Trade</Text>
           <TouchableOpacity>
-            <MaterialCommunityIcons name="alarm" size={26} color="white" style={{marginRight:20}} />
+            <MaterialCommunityIcons name="alarm" size={26} color="black" style={{marginRight:20}} />
           </TouchableOpacity>
         </View>
 
@@ -62,7 +66,7 @@ const TradeScreen = ({ onNavigate }) => {
               <View style={styles.tabSpacer} />
             </ScrollView>
             <TouchableOpacity style={styles.searchIcon}>
-              <MaterialCommunityIcons name="magnify" size={24} color="#fff" />
+              <MaterialCommunityIcons name="magnify" size={24} color="black" />
             </TouchableOpacity>
           </View>
         </View>
@@ -500,45 +504,123 @@ const TradeScreen = ({ onNavigate }) => {
 </ScrollView>
 
 {/* Fixed Footer Navigation */}
-<View style={styles.footer}>
-  <TouchableOpacity
-    style={styles.footerButton}
-    onPress={() => onNavigate && onNavigate('home')}
-  >
-    <Icon name="view-dashboard-outline" size={24} color="#888" />
-    <Text style={styles.footerText}>Accounts</Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity
-    style={styles.footerButton}
-    onPress={() => onNavigate && onNavigate('trade')}
-  >
-    <View style={{ marginBottom: 4 }}>
-      <TradeIcon size={24} color="#fff" />
-    </View>
-    <Text style={styles.footerTextActive}>Trade</Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity style={styles.footerButton}>
-    <Icon name="web" size={24} color="#888888" />
-    <Text style={styles.footerText}>Insights</Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity
-    style={styles.footerButton}
-    onPress={() => onNavigate && onNavigate('graph')}
-  >
-    <View style={{ marginBottom: 4 }}>
-      <MaterialIcons name="signal-cellular-alt" size={24} color="#888" />
-    </View>
-    <Text style={styles.footerText}>Performance</Text>
-  </TouchableOpacity>
-
-  <TouchableOpacity style={styles.footerButton}>
-    <Icon name="account-circle-outline" size={24} color="#888888" />
-    <Text style={styles.footerText}>Profile</Text>
-  </TouchableOpacity>
-</View>
+<View style={[styles.footer,{ paddingBottom: insets.bottom }]}>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => {
+            if (props.navigation) {
+              props.navigation.navigate('Home');
+            }
+          }}
+        >
+          <Icon name="view-dashboard-outline" size={24} color="#888" />
+          <Text style={styles.footerText}>Accounts</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => {}}
+        >
+          <View style={{marginBottom: 4}}>
+            <TradeIcon size={24} color="white" />
+          </View>
+          <Text style={[styles.footerText, {color: 'white', fontWeight: 'bold'}]}>Trade</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.footerButton}>
+        <Icon name="web" size={24} color="#888888" />
+        <Text style={styles.footerText}>Insights</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.footerButton} 
+        onPress={() => props.navigation && props.navigation.navigate('Graph')}
+      >
+        <View style={{marginBottom: 4}}>
+          <MaterialIcons name="signal-cellular-alt" size={24} color="#888" />
+        </View>
+        <Text style={styles.footerText}>Performance</Text>
+      </TouchableOpacity>
+      <View style={styles.profileContainer}>
+        <TouchableOpacity 
+          style={styles.footerButton}
+          onPress={() => setShowProfileMenu(!showProfileMenu)}
+        >
+          <Icon name="account-circle-outline" size={24} color="#888888" />
+          <Text style={styles.footerText}>Profile</Text>
+        </TouchableOpacity>
+        
+        {showProfileMenu && (
+          <RNTouchableWithoutFeedback onPress={() => setShowProfileMenu(false)}>
+            <View style={styles.profileMenuOverlay}>
+              <View style={styles.profileMenu}>
+                {/* Close button */}
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setShowProfileMenu(false)}
+                >
+                  <Icon name="close" size={20} color="#000000" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.profileMenuItem}
+                  onPress={() => {
+                    Alert.alert(
+                      "Logout",
+                      "Are you sure you want to logout?",
+                      [
+                        {
+                          text: "No",
+                          style: "cancel",
+                          onPress: () => console.log("Logout cancelled")
+                        },
+                        { 
+                          text: "Yes",
+                          style: "default",
+                          onPress: async () => {
+                            try {
+                              setIsLoggingOut(true);
+                              const user = auth.currentUser;
+                              
+                              if (user) {
+                                // Update user status in Firestore
+                                const userRef = doc(db, "users", user.uid);
+                                await updateDoc(userRef, {
+                                  isLoggedIn: false,
+                                  lastLogout: serverTimestamp()
+                                });
+                                
+                                // Sign out from Firebase Auth
+                                await signOut(auth);
+                                
+                                // Navigate to Login screen
+                                props.navigation.replace('Login');
+                              }
+                            } catch (error) {
+                              console.error("Logout error:", error);
+                              Alert.alert("Logout Error", "Failed to sign out. Please try again.");
+                            } finally {
+                              setIsLoggingOut(false);
+                            }
+                          }
+                        }
+                      ],
+                      { cancelable: true }
+                    );
+                    setShowProfileMenu(false);
+                  }}
+                >
+                  <Icon name="logout" size={20} color="#000000" paddingTop={10} style={styles.profileMenuIcon} />
+                  <Text style={[styles.profileMenuText, {color: '#000000'}]}>
+                    {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  </Text>
+                  {isLoggingOut && <ActivityIndicator size="small" color="#000000" style={{marginLeft: 10}} />}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </RNTouchableWithoutFeedback>
+        )}
+      </View>
+      </View>
 </View>
 );
 };
@@ -599,21 +681,16 @@ const styles = StyleSheet.create({
   balanceBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#171718',
+    backgroundColor: '#fff',
     borderRadius: 20,
     borderWidth: 0.5,
     borderColor: '#939393',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   
   demoPill: {
-    backgroundColor: '#144C3C',
+    backgroundColor: '#DEF8DD',
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 6,
@@ -621,13 +698,13 @@ const styles = StyleSheet.create({
   },
   
   demoText: {
-    color: '#00C26D',
+    color: '#08680A',
     fontSize: 13,
     fontWeight: '600',
   },
   
   balanceAmount: {
-    color: '#fff',
+    color: 'black',
     fontWeight: 'bold',
     fontSize: 13,
     marginRight: 2,
@@ -637,7 +714,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },  
   tradeTitle: {
-    color: '#fff',
+    color: 'black',
     fontSize: 24,
     fontWeight: 'bold',
     marginLeft: 8,
@@ -674,7 +751,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   tabActive: {
-    color: '#fff',
+    color: 'black',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -743,7 +820,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#232222',
+    backgroundColor: '#fff',
     paddingVertical: 13,
     borderTopWidth: 1,
     borderTopColor: '#222',
