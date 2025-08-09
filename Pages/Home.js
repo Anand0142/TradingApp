@@ -1,3 +1,4 @@
+
 import { StatusBar } from 'expo-status-bar';
 import { 
   Animated,
@@ -378,7 +379,7 @@ const headerOpacity = scrollY.interpolate({
         <View style={styles.accountActions}>
           <TouchableOpacity 
             style={styles.actionButtonTrade} 
-            onPress={() => props.navigation.navigate('Trade')}
+            onPress={() => props.navigation.navigate('Trade', { selectedAccount })}
           >
             <View style={styles.tradeIconContainer}>
               <TradeIcon size={29} color="black" />
@@ -454,8 +455,8 @@ const headerOpacity = scrollY.interpolate({
       {/* Status text based on active tab */}
       <Text style={styles.statusText1}>
         {activeTab === 'open' && 'No open positions'}
-        {activeTab === 'pending' && 'No open positions'}
-        {activeTab === 'closed' && 'No open positions'}
+        {activeTab === 'pending' && 'No pending orders'}
+        {activeTab === 'closed' && 'No closed positions'}
       </Text>
       {/* Trade box */}
       <View style={styles.tradeBox1}>

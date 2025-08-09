@@ -6,88 +6,142 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Dimensions
+  SafeAreaView,
+  useWindowDimensions,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MaterialIcons } from '@expo/vector-icons';
 import TradeIcon from '../assets/TradeIcon';
 import { Svg, Line, Polyline } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { verticalScale } from 'react-native-size-matters';
 
 const TradeScreen = (props) => {
+  // Get selectedAccount from navigation params
+  const selectedAccount = props.route?.params?.selectedAccount;
+
+  // Use selectedAccount or fallback to default
+  const account = selectedAccount || {
+    type: 'ZERO',
+    balance: 500.00,
+    currency: 'INR',
+    name: 'Demo',
+  };
+
   const insets = useSafeAreaInsets();
+  const { height, width } = useWindowDimensions();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('Favorites'); 
+  const [activeAccount, setActiveAccount] = React.useState({
+    type: 'Demo',      
+    balance: 500.00,   
+    currency: 'INR',
+  });
   const { onNavigate } = props;
+  
+  React.useEffect(() => {
+    console.log('Trade screen mounted with props:', props);
+    console.log('onNavigate function exists:', !!onNavigate);
+  }, []);
+  
   const handleTradePress = (symbol) => {
-    onNavigate && onNavigate('graph', { symbol });
+    console.log('Trade pressed with symbol:', symbol);
+    if (symbol === 'BTC') {
+      console.log('Navigating to Stock screen');
+      onNavigate && onNavigate('Stock');
+    } else {
+      console.log('Navigating to graph with symbol:', symbol);
+      onNavigate && onNavigate('graph', { symbol });
+    }
+  };
+
+  // This function should be called when user selects an account (from Home page or account switcher)
+  const handleAccountSelect = (account) => {
+    setActiveAccount({
+      type: account.type,
+      balance: account.balance,
+      currency: account.currency || 'INR',
+    });
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f4f4f4' }}>
-      
-      {/* Fixed Top Section */}
-      <View>
-        {/* Balance */}
-        <View style={styles.balanceContainer}>
-          <View style={styles.balanceBox}>
-            <View style={styles.demoPill}>
-              <Text style={styles.demoText}>Demo</Text>
-            </View>
-            <Text style={styles.balanceAmount}>500.00 USD</Text>
-            <MaterialCommunityIcons name="dots-vertical" size={18} color="black" />
-          </View>
-        </View>
-
-        {/* Trade Header */}
-        <View style={styles.tradeHeader}>
-          <Text style={styles.tradeTitle}>Trade</Text>
-          <TouchableOpacity>
-            <MaterialCommunityIcons name="alarm" size={26} color="black" style={{marginRight:20}} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Tab Bar */}
-        <View style={styles.tabBar}>
-          <View style={styles.tabContent}>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.scrollViewContent}
-            >
-              <View style={styles.tabItem}>
-                <Text style={styles.tabActive}>Favorites</Text>
-                <View style={styles.activeTabIndicator} />
+    <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View style={styles.container}>
+        {/* Top Section */}
+        <View>
+          {/* Balance */}
+          <View style={styles.balanceContainer}>
+            <View style={styles.balanceBox}>
+              <View style={styles.demoPill}>
+                <Text style={styles.demoText}>{account.type}</Text>
               </View>
-              <Text style={styles.tab}>Most traded</Text>
-              <Text style={styles.tab}>Top Movers</Text>
-              <Text style={styles.tab}>Markets</Text>
-              <View style={styles.tabSpacer} />
-            </ScrollView>
-            <TouchableOpacity style={styles.searchIcon}>
-              <MaterialCommunityIcons name="magnify" size={24} color="black" />
+              <Text style={styles.balanceAmount}>
+                {parseFloat(account.balance).toFixed(2)} {account.currency}
+              </Text>
+              <MaterialCommunityIcons name="dots-vertical" size={18} color="black" />
+            </View>
+          </View>
+
+          {/* Trade Header */}
+          <View style={styles.tradeHeader}>
+            <Text style={styles.tradeTitle}>Trade</Text>
+            <TouchableOpacity>
+              <MaterialCommunityIcons name="alarm" size={26} color="black" style={{marginRight:20}} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Tab Bar */}
+          <View style={styles.tabBar}>
+            <View style={styles.tabContent}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ alignItems: 'center' }}
+              >
+                {['Favorites', 'Most traded', 'Top Movers', 'Markets'].map(tab => (
+                  <TouchableOpacity
+                    key={tab}
+                    onPress={() => setActiveTab(tab)}
+                    style={styles.tabItem}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={activeTab === tab ? styles.tabActive : styles.tab}>
+                      {tab}
+                    </Text>
+                    {activeTab === tab && <View style={styles.activeTabIndicator} />}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity style={styles.searchIcon}>
+                <MaterialCommunityIcons name="magnify" size={26} color="black" marginRight={4} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Sorted Section */}
+          <View style={styles.sortRow}>
+            <TouchableOpacity style={styles.sortButton}>
+              <Text style={styles.sortText}>Sorted manually</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.editButton}>
+              <Text style={styles.editText}>Edit</Text>
+              <MaterialCommunityIcons name="square-edit-outline" size={16} color="black" fontWeight="bold" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Sorted Section */}
-        <View style={styles.sortRow}>
-          <TouchableOpacity style={styles.sortButton}>
-            <Text style={styles.sortText}>Sorted manually</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editText}>Edit</Text>
-            <MaterialCommunityIcons name="square-edit-outline" size={16} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
-        {/* Bitcoin Trade Container #1 */}
-        <View style={styles.tradeContainer1}>
+        {/* Main Scrollable Content */}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ 
+            paddingBottom: 50, 
+            minHeight: height - 180 
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Bitcoin Trade Container #1 */}
+          <View style={styles.tradeContainer1}>
   <TouchableOpacity 
     style={styles.tradeItem} 
     onPress={() => handleTradePress('BTC')}
@@ -487,7 +541,7 @@ const TradeScreen = (props) => {
         {/* Price + Change Container */}
         <View style={styles.priceChangeContainer}>
           <Text style={styles.assetPrice}>117,901.93</Text>
-          <Text style={[styles.assetChange, { color: '#FF5B5A' }]}>↓-1.31%</Text>
+          <Text style={[styles.assetChange, { color: '#d12323ff' }]}>↓-1.31%</Text>
         </View>
       </View>
       
@@ -501,159 +555,164 @@ const TradeScreen = (props) => {
   </TouchableOpacity>
 </View>
 
-</ScrollView>
+        </ScrollView>
 
-{/* Fixed Footer Navigation */}
-<View style={[styles.footer,{ paddingBottom: insets.bottom }]}>
-        <TouchableOpacity 
-          style={styles.footerButton} 
-          onPress={() => {
-            if (props.navigation) {
-              props.navigation.navigate('Home');
-            }
-          }}
-        >
-          <Icon name="view-dashboard-outline" size={24} color="#888" />
-          <Text style={styles.footerText}>Accounts</Text>
+        {/* Fixed Footer Navigation */}
+        <View style={[styles.footer]}>
+          <TouchableOpacity 
+            style={styles.footerButton} 
+            onPress={() => {
+              if (props.navigation) {
+                props.navigation.navigate('Home');
+              }
+            }}
+          >
+            <MaterialCommunityIcons name="view-dashboard-outline" size={24} color="#888" />
+            <Text style={styles.footerText}>Accounts</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.footerButton} 
+            onPress={() => {}}
+          >
+            <View style={{marginBottom: 4}}>
+              <TradeIcon size={24} color="black" />
+            </View>
+            <Text style={[styles.footerText, {color: 'black', fontWeight: 'bold'}]}>Trade</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.footerButton}>
+          <MaterialCommunityIcons name="web" size={24} color="#888888" />
+          <Text style={styles.footerText}>Insights</Text>
         </TouchableOpacity>
-        
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => {}}
+          onPress={() => props.navigation && props.navigation.navigate('Graph')}
         >
           <View style={{marginBottom: 4}}>
-            <TradeIcon size={24} color="white" />
+            <MaterialIcons name="signal-cellular-alt" size={24} color="#888" />
           </View>
-          <Text style={[styles.footerText, {color: 'white', fontWeight: 'bold'}]}>Trade</Text>
+          <Text style={styles.footerText}>Performance</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.footerButton}>
-        <Icon name="web" size={24} color="#888888" />
-        <Text style={styles.footerText}>Insights</Text>
-      </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.footerButton} 
-        onPress={() => props.navigation && props.navigation.navigate('Graph')}
-      >
-        <View style={{marginBottom: 4}}>
-          <MaterialIcons name="signal-cellular-alt" size={24} color="#888" />
-        </View>
-        <Text style={styles.footerText}>Performance</Text>
-      </TouchableOpacity>
-      <View style={styles.profileContainer}>
-        <TouchableOpacity 
-          style={styles.footerButton}
-          onPress={() => setShowProfileMenu(!showProfileMenu)}
-        >
-          <Icon name="account-circle-outline" size={24} color="#888888" />
-          <Text style={styles.footerText}>Profile</Text>
-        </TouchableOpacity>
-        
-        {showProfileMenu && (
-          <RNTouchableWithoutFeedback onPress={() => setShowProfileMenu(false)}>
-            <View style={styles.profileMenuOverlay}>
-              <View style={styles.profileMenu}>
-                {/* Close button */}
-                <TouchableOpacity 
-                  style={styles.closeButton}
-                  onPress={() => setShowProfileMenu(false)}
-                >
-                  <Icon name="close" size={20} color="#000000" />
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.profileMenuItem}
-                  onPress={() => {
-                    Alert.alert(
-                      "Logout",
-                      "Are you sure you want to logout?",
-                      [
-                        {
-                          text: "No",
-                          style: "cancel",
-                          onPress: () => console.log("Logout cancelled")
-                        },
-                        { 
-                          text: "Yes",
-                          style: "default",
-                          onPress: async () => {
-                            try {
-                              setIsLoggingOut(true);
-                              const user = auth.currentUser;
-                              
-                              if (user) {
-                                // Update user status in Firestore
-                                const userRef = doc(db, "users", user.uid);
-                                await updateDoc(userRef, {
-                                  isLoggedIn: false,
-                                  lastLogout: serverTimestamp()
-                                });
+        <View style={styles.profileContainer}>
+          <TouchableOpacity 
+            style={styles.footerButton}
+            onPress={() => setShowProfileMenu(!showProfileMenu)}
+          >
+            <MaterialCommunityIcons name="account-circle-outline" size={24} color="#888888" />
+            <Text style={styles.footerText}>Profile</Text>
+          </TouchableOpacity>
+          
+          {showProfileMenu && (
+            <RNTouchableWithoutFeedback onPress={() => setShowProfileMenu(false)}>
+              <View style={styles.profileMenuOverlay}>
+                <View style={styles.profileMenu}>
+                  {/* Close button */}
+                  <TouchableOpacity 
+                    style={styles.closeButton}
+                    onPress={() => setShowProfileMenu(false)}
+                  >
+                    <Icon name="close" size={20} color="#000000" />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.profileMenuItem}
+                    onPress={() => {
+                      Alert.alert(
+                        "Logout",
+                        "Are you sure you want to logout?",
+                        [
+                          {
+                            text: "No",
+                            style: "cancel",
+                            onPress: () => console.log("Logout cancelled")
+                          },
+                          { 
+                            text: "Yes",
+                            style: "default",
+                            onPress: async () => {
+                              try {
+                                setIsLoggingOut(true);
+                                const user = auth.currentUser;
                                 
-                                // Sign out from Firebase Auth
-                                await signOut(auth);
-                                
-                                // Navigate to Login screen
-                                props.navigation.replace('Login');
+                                if (user) {
+                                  // Update user status in Firestore
+                                  const userRef = doc(db, "users", user.uid);
+                                  await updateDoc(userRef, {
+                                    isLoggedIn: false,
+                                    lastLogout: serverTimestamp()
+                                  });
+                                  
+                                  // Sign out from Firebase Auth
+                                  await signOut(auth);
+                                  
+                                  // Navigate to Login screen
+                                  props.navigation.replace('Login');
+                                }
+                              } catch (error) {
+                                console.error("Logout error:", error);
+                                Alert.alert("Logout Error", "Failed to sign out. Please try again.");
+                              } finally {
+                                setIsLoggingOut(false);
                               }
-                            } catch (error) {
-                              console.error("Logout error:", error);
-                              Alert.alert("Logout Error", "Failed to sign out. Please try again.");
-                            } finally {
-                              setIsLoggingOut(false);
                             }
                           }
-                        }
-                      ],
-                      { cancelable: true }
-                    );
-                    setShowProfileMenu(false);
-                  }}
-                >
-                  <Icon name="logout" size={20} color="#000000" paddingTop={10} style={styles.profileMenuIcon} />
-                  <Text style={[styles.profileMenuText, {color: '#000000'}]}>
-                    {isLoggingOut ? 'Logging out...' : 'Logout'}
-                  </Text>
-                  {isLoggingOut && <ActivityIndicator size="small" color="#000000" style={{marginLeft: 10}} />}
-                </TouchableOpacity>
+                        ],
+                        { cancelable: true }
+                      );
+                      setShowProfileMenu(false);
+                    }}
+                  >
+                    <Icon name="logout" size={20} color="#000000" paddingTop={10} style={styles.profileMenuIcon} />
+                    <Text style={[styles.profileMenuText, {color: '#000000'}]}>
+                      {isLoggingOut ? 'Logging out...' : 'Logout'}
+                    </Text>
+                    {isLoggingOut && <ActivityIndicator size="small" color="#000000" style={{marginLeft: 10}} />}
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          </RNTouchableWithoutFeedback>
-        )}
+            </RNTouchableWithoutFeedback>
+          )}
+        </View>
+        </View>
       </View>
-      </View>
-</View>
-);
+    </SafeAreaView>
+  );
 };
+
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f4f4f4',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f4f4f4',
+    justifyContent: 'flex-start',
+  },
   tradeContainer1: {
     borderRadius: 4,
-    padding: 3,
+    padding: 2.5,
   },
   tradeContainer2: {
     borderRadius: 4,
-    padding: 3,
+    padding: 2.5,
   },
   tradeContainer3: {
     borderRadius: 4,
-    padding: 3,
+    padding: 2.5,
   },
   tradeContainer4: {
     borderRadius: 4,
-    padding: 3,
+    padding: 2.5,
   },
   tradeContainer5: {
     borderRadius: 4,
-    padding: 3,
+    padding: 2.5,
   },
   tradeContainer6: {
     borderRadius: 4,
-    padding: 3,
-  },  
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F13',
-    paddingTop: 40,
-    paddingHorizontal: 16,
+    padding: 2.5,
   },
   topHeader: {
     flexDirection: 'row',
@@ -731,12 +790,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#2A2A2A',
+    borderBottomColor: '#94949a',
+    paddingHorizontal: 12,
   },
   tabContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
   },
   scrollViewContent: {
     paddingRight: 12,
@@ -746,36 +805,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    marginRight: 10,
+    backgroundColor: 'transparent', // No pill styling
     position: 'relative',
-    marginRight: 20,
-    paddingVertical: 12,
   },
   tabActive: {
     color: 'black',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  activeTabIndicator: {
-    position: 'absolute',
-    bottom: -1,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: '#fff',
-    borderRadius: 2,
+    fontWeight: 'bold',
   },
   tab: {
     color: '#888',
-    fontSize: 14,
     fontWeight: '500',
-    marginRight: 20,
-    paddingVertical: 12,
   },
-  tabSpacer: {
-    flex: 1,
+  activeTabIndicator: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 2,
+    backgroundColor: 'black',
+    borderRadius: 2,
   },
   searchIcon: {
-    padding: 8,
     marginLeft: 8,
   },
   sortRow: {
@@ -786,64 +839,63 @@ const styles = StyleSheet.create({
     marginHorizontal:2,
   },
   sortButton: {
-    backgroundColor: '#222',
+    backgroundColor: '#ECECED',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight:12,
   },
   sortText: {
-    color: '#D0D0D1',
+    color: 'black',
+    fontWeight: '400',
   },
   editButton: {
     flexDirection: 'row',
-    backgroundColor: '#222',
+    backgroundColor: '#ECECED',
     borderRadius: 16,
     paddingHorizontal: 10,
     paddingVertical: 6,
     alignItems: 'center',
+    fontWeight: 'bold',
   },
   editText: {
-    color: '#fff',
+    color: 'black',
     marginLeft: 4,
     marginRight:2,
   },
   tradeItem: {
-    backgroundColor: '#1A1C1F',
+    backgroundColor: 'white',
     borderRadius: 16,
-    padding: 12,
-    marginBottom: 12,
+    padding: 10,
+    marginBottom: 5,
     marginHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#fff',
-    paddingVertical: 13,
-    borderTopWidth: 1,
-    borderTopColor: '#222',
-    position:'fixed',
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      backgroundColor: '#fff',
+      paddingTop: verticalScale(8),
+      paddingBottom: verticalScale(2),
+      borderTopWidth: 0.2,
+      borderTopColor: '#BFC0BF',
   },
   footerButton: {
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: verticalScale(12),
   },
   footerText: {
     color: '#888',
     fontSize: 12,
-    marginTop: 4,
+    marginTop: verticalScale(2),
   },
   footerTextActive: {
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: verticalScale(12),
   },
   tradeItemContent: {
     flexDirection: 'column',
-    paddingVertical: 8,
+    paddingVertical: verticalScale(5),
   },
   topRowContainer: {
     flexDirection: 'row',
@@ -905,7 +957,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   assetTitle: {
-    color: '#fff',
+    color: 'black',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -916,7 +968,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   assetPrice: {
-    color: '#fff',
+    color: 'black',
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
@@ -966,27 +1018,6 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 12,
     marginRight: 4,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#0D0F13',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#222',
-  },
-  footerButton: {
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#888',
-    fontSize: 10,
-    marginTop: 4,
-  },
-  footerTextActive: {
-    color: '#fff',
-    fontSize: 10,
-    marginTop: 4,
   },
 });
 

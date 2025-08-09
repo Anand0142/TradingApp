@@ -10,6 +10,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { MaterialIcons } from '@expo/vector-icons';
 import { BarChart } from 'react-native-chart-kit';
 import TradeIcon from '../assets/TradeIcon';
+import { scale, verticalScale } from 'react-native-size-matters';
 
 const screenWidth = Dimensions.get('window').width - 64;
 
@@ -126,13 +127,16 @@ const Graph = (props) => {
       <View style={styles.footer}>
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => props.onNavigate && props.onNavigate('home')}
+          onPress={() => props.navigation && props.navigation.navigate('Home')}
         >
           <MaterialCommunityIcons name="view-dashboard-outline" size={24} color="#888" />
           <Text style={styles.footerText}>Accounts</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.footerButton} onPress={() => props.onNavigate && props.onNavigate('trade')}>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => props.navigation && props.navigation.navigate('Trade')}
+        >
           <View style={{marginBottom: 4}}>
             <TradeIcon size={24} color="#888" />
           </View>
@@ -146,7 +150,7 @@ const Graph = (props) => {
         
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => props.onNavigate && props.onNavigate('graph')}
+          onPress={() => props.navigation && props.navigation.navigate('Graph')}
         >
           <View style={{marginBottom: 4}}>
             <MaterialIcons name="signal-cellular-alt" size={24} color="#000" />
@@ -169,8 +173,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAFA',
-    paddingTop: 30,
-    paddingHorizontal: 16,
+    paddingTop: verticalScale(8),     
+    paddingHorizontal: scale(6), 
   },
   title: {
     fontSize: 24,
@@ -274,15 +278,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 16,
     marginBottom: 10,
-    // Shadow for iOS - bottom only
     shadowColor: '#867D7D',
     shadowOffset: {
       width: 0,
-      height: 2, // Controls the vertical offset (smaller value = shadow closer to the card)
+      height: 2, 
     },
-    shadowOpacity: 0.1, // Makes the shadow lighter
-    shadowRadius: 2, // Makes the shadow sharper
-    // Shadow for Android - bottom only
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 0.2,
   },
   legendContainer: {

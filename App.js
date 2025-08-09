@@ -10,6 +10,7 @@ import Graph from './Pages/Graph';
 import Trade from './Pages/Trade';
 import Deposit from './Pages/Deposit';
 import DepositStatus from './Pages/depositStatus';
+import Stock from './Pages/stock';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,7 +39,15 @@ export default function App() {
             {props => <Home {...props} balance={balance} />}
           </Stack.Screen>
           <Stack.Screen name="Graph" component={Graph} />
-          <Stack.Screen name="Trade" component={Trade} />
+          <Stack.Screen name="Trade">
+            {props => <Trade {...props} onNavigate={(screen, params) => {
+              if (params) {
+                props.navigation.navigate(screen, params);
+              } else {
+                props.navigation.navigate(screen);
+              }
+            }} />}
+          </Stack.Screen>
           <Stack.Screen name="Deposit" component={Deposit} />
           <Stack.Screen name="DepositStatus">
             {props => (
@@ -48,6 +57,7 @@ export default function App() {
               />
             )}
           </Stack.Screen>
+          <Stack.Screen name="Stock" component={Stock} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

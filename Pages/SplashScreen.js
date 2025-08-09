@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Image, Dimensions, Animated } from 'react-native';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../components/firebase';
+import { auth, getAuth } from '../components/firebase';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 
 const SplashScreen = ({ navigation }) => {
   const [fadeAnim] = useState(new Animated.Value(1));
