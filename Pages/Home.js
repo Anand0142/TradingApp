@@ -93,6 +93,29 @@ const safeOpenOrders = Array.isArray(openOrders) ? openOrders : [];
     }
   }, 0);
 
+  // Function to update balance with profit/loss when closing an order
+  const updateBalanceWithProfit = async (profit) => {
+    if (!selectedAccount) return;
+    
+    try {
+      const updated = accounts.map(acc => {
+        if (acc.id === selectedAccount.id) {
+          return {
+            ...acc,
+            balance: (acc.balance || 0) + parseFloat(profit)
+          };
+        }
+        return acc;
+      });
+
+      const newSelected = updated.find(acc => acc.id === selectedAccount.id);
+      setAccounts(updated);
+      setSelectedAccount(newSelected);
+      await AsyncStorage.setItem('accountsData', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Error updating balance with profit:', err);
+    }
+  };
 
 const headerHeight = scrollY.interpolate({
   inputRange: [0, 100],
@@ -112,7 +135,7 @@ const headerOpacity = scrollY.interpolate({
       id: 1,
       type: 'STANDARD',
       number: '269446202',
-      balance: 10.00,
+      balance: 10.00, // This single variable tracks all balance changes
       isDemo: false,
       name: '',
       customId: ''
@@ -140,9 +163,31 @@ const headerOpacity = scrollY.interpolate({
     setScreenParams(params);
   };
 
-  const handleDeposit = (updatedAccounts, updatedSelected) => {
-    setAccounts(updatedAccounts);
-    setSelectedAccount(updatedSelected);
+  const handleDeposit = async (updatedAccounts, updatedSelected, depositAmount = 0) => {
+    try {
+      // Update the accounts with the new deposit
+      const updated = updatedAccounts.map(acc => {
+        if (acc.id === updatedSelected.id) {
+          const newBalance = (acc.balance || 0) + parseFloat(depositAmount);
+          return {
+            ...acc,
+            balance: newBalance
+          };
+        }
+        return acc;
+      });
+
+      // Update state
+      const newSelected = updated.find(acc => acc.id === updatedSelected.id);
+      setAccounts(updated);
+      setSelectedAccount(newSelected);
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem('accountsData', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Error processing deposit:', err);
+      Alert.alert('Error', 'Failed to process deposit');
+    }
   };
 
   useEffect(() => {
@@ -285,8 +330,8 @@ const headerOpacity = scrollY.interpolate({
         <Text style={styles.headerText}>Accounts</Text>
         <View style={styles.headerIconsContainer}>
           <View style={styles.topIcons}>
-            <TouchableOpacity style={[styles.iconButton,{fontWeight: 'bold'}]}>
-              <Icon name="alarm" size={24} color="black" />
+            <TouchableOpacity style={[styles.iconButton,{fontWeight: 'bold'}]} onPress={() => setShowProfileMenu(!showProfileMenu)}>
+              <Icon name="alarm" size={24} color="black"  />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.iconButton, {marginLeft: 15},{fontWeight: 'bold'}]}>
               <Icon name="bell-outline" size={24} color="black" />
@@ -333,7 +378,12 @@ const headerOpacity = scrollY.interpolate({
               <MaterialCommunityIcons name="chevron-right" size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.balanceText}>{parseFloat(selectedAccount.balance).toFixed(2)} INR</Text>
+          <Text style={styles.balanceText}>
+            {(
+              parseFloat(selectedAccount.balance || 0) + 
+              (activeTab === 'open' ? parseFloat(totalPL || 0) : 0)
+            ).toFixed(2)} INR
+          </Text>
         <Modal
           visible={showAccountSwitcher}
           animationType="slide"
@@ -499,7 +549,7 @@ const headerOpacity = scrollY.interpolate({
   style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
   onPress={() => setActiveTab('open')}
 >
-  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+  <View style={{ flexDirection: 'row', alignItems: 'center',gap: 0 }}>
     <Text style={[styles.tabText, activeTab === 'open' && styles.tabTextActive]}>
       Open
     </Text>
@@ -538,7 +588,7 @@ const headerOpacity = scrollY.interpolate({
 </TouchableOpacity>
       
       <TouchableOpacity style={styles.refreshButton}>
-        <RemixIcon name="arrow-up-down-line" size={20} color="#777" />
+        <RemixIcon name="arrow-up-down-line" size={22} color="#777" />
       </TouchableOpacity>
     </View>
     <View style={styles.bottomLine} />
@@ -790,6 +840,10 @@ const headerOpacity = scrollY.interpolate({
         const pl = selectedOrder.type === 'SELL'
           ? (entryPrice - livePrice) * qty
           : (livePrice - entryPrice) * qty;
+        
+        // Update the balance with the profit/loss
+        await updateBalanceWithProfit(pl);
+        
         setCloseNotificationData({
           symbol: selectedOrder.symbol,
           type: selectedOrder.type,
@@ -1532,13 +1586,14 @@ const styles = StyleSheet.create({
   },
   tabs: {
   marginTop: 20,
+  marginBottom: 20,
   backgroundColor: '#f5f5f5', 
 },
 
 tabsRow: {
   flexDirection: 'row',
   justifyContent: 'space-between',
-  paddingHorizontal: 15,
+  paddingHorizontal: 10,
 },
 
 tabButton: {
@@ -1562,10 +1617,11 @@ tabTextActive: {
   fontWeight: '500',
 },
   refreshButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 5,
     flexDirection: 'row',
     alignItems: 'center',
+    padding:6,
   },
   bottomLine: {
   height: 2,
@@ -1836,19 +1892,19 @@ openCardSymbol: {
   marginRight: 8,
 },
 openCardCount: {
-  backgroundColor: '#ECECED',
-  borderRadius: 10,
+  backgroundColor: '#7B8A97',
+  borderRadius: 18,
   paddingHorizontal: 7,
   marginRight: 8,
-  marginLeft: 2,
+  marginLeft: 4,
   height: 22,
   justifyContent: 'center',
   alignItems: 'center',
   marginTop: 2,
 },
 openCardCountText: {
-  fontSize: 15,
-  color: '#888',
+  fontSize: 13,
+  color: '#fff',
   fontWeight: 'bold',
 },
 openCardPL: {
