@@ -1,4 +1,3 @@
-
 import { StatusBar } from 'expo-status-bar';
 import { 
   Animated,
@@ -65,9 +64,29 @@ export default function Home(props) {
   const [newId, setNewId] = useState('');
   const [activeTab, setActiveTab] = useState('open');
   const insets = useSafeAreaInsets();
+  const [openOrders, setOpenOrders] = useState([]);
+  const [livePrices, setLivePrices] = useState({});
   const scrollY = new Animated.Value(0);
 
 // Header will collapse from 150px to 50px
+
+const safeOpenOrders = Array.isArray(openOrders) ? openOrders : [];
+  const symbol = safeOpenOrders.length > 0 && safeOpenOrders[0]?.symbol ? safeOpenOrders[0].symbol : 'BTC';
+  const symbolOrders = safeOpenOrders.filter(o => o.symbol === symbol);
+  const firstOrder = symbolOrders.length > 0 ? symbolOrders[0] : null;
+  const livePrice = livePrices[symbol] || (firstOrder ? firstOrder.currentPrice : 0) || (firstOrder ? firstOrder.price : 0) || 0;
+
+  const totalPL = symbolOrders.reduce((sum, order) => {
+    const qty = Number(order.quantity);
+    const entryPrice = Number(order.price);
+    if (order.type === 'SELL') {
+      return sum + ((entryPrice - livePrice) * qty);
+    } else {
+      return sum + ((livePrice - entryPrice) * qty);
+    }
+  }, 0);
+
+
 const headerHeight = scrollY.interpolate({
   inputRange: [0, 100],
   outputRange: [150, 50],
@@ -106,6 +125,7 @@ const headerOpacity = scrollY.interpolate({
   const [currentScreen, setCurrentScreen] = useState('home');
   const [screenParams, setScreenParams] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [hasOpenOrders, setHasOpenOrders] = useState(false);
 
   const handleNavigation = (screen, params = {}) => {
     console.log('Navigating to:', screen, 'with params:', params);
@@ -117,6 +137,51 @@ const headerOpacity = scrollY.interpolate({
     setAccounts(updatedAccounts);
     setSelectedAccount(updatedSelected);
   };
+
+  useEffect(() => {
+  const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    // Binance trade stream: { p: "price", ... }
+    if (data.p) {
+      setLivePrices(prev => ({ ...prev, BTC: parseFloat(data.p) }));
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.log('WebSocket error:', error.message);
+  };
+
+  ws.onclose = () => {
+    console.log('WebSocket closed');
+  };
+
+  return () => {
+    ws.close();
+  };
+}, []);
+
+  useEffect(() => {
+  const loadOpenOrders = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('openOrders');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setOpenOrders(Array.isArray(parsed) ? parsed : []);
+        setHasOpenOrders(Array.isArray(parsed) && parsed.length > 0);
+      } else {
+        setOpenOrders([]);
+        setHasOpenOrders(false);
+      }
+    } catch (err) {
+      setOpenOrders([]);
+      setHasOpenOrders(false);
+    }
+  };
+  loadOpenOrders();
+}, [activeTab]);
+
   
   useEffect(() => {
     const loadAccounts = async () => {
@@ -420,81 +485,111 @@ const headerOpacity = scrollY.interpolate({
 
         {/* Tabs */}
         <View style={styles.tabs}>
-        <View style={[styles.stickyTabs, { top: headerHeight }]}>
-        <View style={styles.tabsRow}>
-  <TouchableOpacity 
-    style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
-    onPress={() => setActiveTab('open')}
-  >
-    <Text style={[styles.tabText, activeTab === 'open' && styles.tabTextActive]}>Open</Text>
-  </TouchableOpacity>
+          <View style={[styles.stickyTabs, { top: headerHeight }]}>
+            <View style={styles.tabsRow}>
+              <TouchableOpacity 
+                style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
+                onPress={() => setActiveTab('open')}
+              >
+                <Text style={[styles.tabText, activeTab === 'open' && styles.tabTextActive]}>Open</Text>
+              </TouchableOpacity>
 
-  <TouchableOpacity 
-    style={[styles.tabButton, activeTab === 'pending' && styles.tabButtonActive]}
-    onPress={() => setActiveTab('pending')}
-  >
-    <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>Pending</Text>
-  </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tabButton, activeTab === 'pending' && styles.tabButtonActive]}
+                onPress={() => setActiveTab('pending')}
+              >
+                <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>Pending</Text>
+              </TouchableOpacity>
 
-  <TouchableOpacity 
-    style={[styles.tabButton, activeTab === 'closed' && styles.tabButtonActive]}
-    onPress={() => setActiveTab('closed')}
-  >
-    <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Closed</Text>
-  </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tabButton, activeTab === 'closed' && styles.tabButtonActive]}
+                onPress={() => setActiveTab('closed')}
+              >
+                <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Closed</Text>
+              </TouchableOpacity>
 
-  <TouchableOpacity style={styles.refreshButton}>
-  <RemixIcon name="arrow-up-down-line" size={20} color="#777" />
-  </TouchableOpacity>
-</View>
+              <TouchableOpacity style={styles.refreshButton}>
+                <RemixIcon name="arrow-up-down-line" size={20} color="#777" />
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.bottomLine} />
+            <View style={styles.bottomLine} />
+          </View>
         </View>
-      </View>
     <View style={styles.container1}>
       {/* Status text based on active tab */}
       <Text style={styles.statusText1}>
-        {activeTab === 'open' && 'No open positions'}
+        {activeTab === 'open' && !hasOpenOrders && 'No open positions'}
         {activeTab === 'pending' && 'No pending orders'}
         {activeTab === 'closed' && 'No closed positions'}
       </Text>
-      {/* Trade box */}
-      <View style={styles.tradeBox1}>
-        <View style={{ position: 'relative', width: moderateScale(  30), height: moderateScale(30) }}>
-            <Image 
-              source={require('../assets/eng.png')} 
-              style={{
-              width: moderateScale(24),
-              height: moderateScale(24),
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              borderRadius: 12, 
-              zIndex: 1
-              }}
-              resizeMode="cover"
-            />
-            <Image 
-              source={require('../assets/usd.png')} 
-              style={{
-              width: moderateScale(24),
-              height: moderateScale(24),
-              position: 'absolute',
-              bottom: 0,
-              right: 0,
-              borderRadius: 12, 
-              zIndex: 2
-              }}
-              resizeMode="cover"
-            />
-          </View>
-          <Text style={styles.tradeText1}>XAU/USD - Trade</Text>
+
+      {/* Open Section: show orders if present, else default UI */}
+      {activeTab === 'open' && (
+        hasOpenOrders ? (
+          <View style={styles.openSectionCard}>
+            <View style={styles.openCardRow}>
+      <Image source={require('../assets/btc.png')} style={styles.openCardIcon} />
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+        <Text style={styles.openCardSymbol}>
+          {openOrders[0]?.symbol || 'BTC'}
+        </Text>
+        <View style={styles.openCardCount}>
+          <Text style={styles.openCardCountText}>
+            {openOrders.filter(o => o.symbol === openOrders[0]?.symbol).length}
+          </Text>
         </View>
-          {/* Explore more */}
-          <View style={styles.explore1}>
-            <MaterialCommunityIcons name="magnify" size={18} color="#333" />
-           <Text style={styles.exploreText1}>Explore more instruments</Text>
+        <Text style={[
+  styles.openCardPL,
+  { color: totalPL < 0 ? '#f00' : '#4CAF50' }
+]}>
+  {isNaN(totalPL) ? '0.00 USD' : (totalPL < 0 ? '' : '+') + totalPL.toFixed(2) + ' USD'}
+</Text>
+      </View>
+    </View>
+    <Text style={styles.openCardDesc}>Fully hedged</Text>
           </View>
+        ) : (
+          <>
+            {/* Default UI if no open orders */}
+            <View style={styles.tradeBox1}>
+              <View style={{ position: 'relative', width: moderateScale(30), height: moderateScale(30) }}>
+                <Image 
+                  source={require('../assets/eng.png')} 
+                  style={{
+                    width: moderateScale(24),
+                    height: moderateScale(24),
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    borderRadius: 12, 
+                    zIndex: 1
+                  }}
+                  resizeMode="cover"
+                />
+                <Image 
+                  source={require('../assets/usd.png')} 
+                  style={{
+                    width: moderateScale(24),
+                    height: moderateScale(24),
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    borderRadius: 12, 
+                    zIndex: 2
+                  }}
+                  resizeMode="cover"
+                />
+              </View>
+              <Text style={styles.tradeText1}>XAU/USD - Trade</Text>
+            </View>
+            <View style={styles.explore1}>
+              <MaterialCommunityIcons name="magnify" size={18} color="#333" />
+              <Text style={styles.exploreText1}>Explore more instruments</Text>
+            </View>
+          </>
+        )
+      )}
     </View>
     </ScrollView>
 
@@ -1316,6 +1411,150 @@ tabTextActive: {
     color: 'black',
     fontWeight: '500',
   },
+  openSection: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  openHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  openTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  openCount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007bff',
+  },
+  orderCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  orderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  orderIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  orderSymbol: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  orderType: {
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  orderVolume: {
+    fontWeight: 'bold',
+  },
+  orderPrice: {
+    color: '#007bff',
+    fontWeight: '500',
+  },
+  orderPL: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 4,
+  },
+  orderLivePrice: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#666',
+  },
+  orderFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 8,
+  },
+  orderTime: {
+    fontSize: 12,
+    color: '#999',
+  },
+  openSectionCard: {
+  width: '99%',
+  backgroundColor: '#fff',
+  borderRadius: 15,
+  padding: 18,
+  alignSelf: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.02,
+  shadowRadius: 2,
+},
+openCardRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 8,
+},
+openCardIcon: {
+  width: 33,
+  height: 33,
+  borderRadius: 16,
+  marginRight: 12,
+  backgroundColor: '#F7F7F7',
+},
+openCardSymbol: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#222',
+  marginRight: 8,
+},
+openCardCount: {
+  backgroundColor: '#ECECED',
+  borderRadius: 10,
+  paddingHorizontal: 7,
+  marginRight: 8,
+  marginLeft: 2,
+  height: 22,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginTop: 2,
+},
+openCardCountText: {
+  fontSize: 15,
+  color: '#888',
+  fontWeight: 'bold',
+},
+openCardPL: {
+  fontSize: 17,
+  fontWeight: 'bold',
+  color: 'rgba(224, 10, 10, 0.71)',
+  marginLeft: 'auto',
+},
+openCardDesc: {
+  fontSize: 15,
+  color: '#888',
+  marginTop: 2,
+  marginBottom: 10,
+  marginLeft: 44,
+},
 });
 
 function AccountCard({ account, accounts = [], isSelected, onSelect }) {

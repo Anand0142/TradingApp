@@ -28,6 +28,7 @@ import Svg, {
 } from 'react-native-svg';
 import FooterNav from '../components/FooterNav';
 import TradeIcon from '../assets/TradeIcon';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // Using React Native's built-in WebSocket
 
 const { width, height } = Dimensions.get('window');
@@ -181,28 +182,52 @@ const ChartGraphScreen = ({ route, navigation }) => {
     setShowOrderModal(true);
   };
 
-  const handleOrderConfirm = () => {
+  // Utility function to save order to AsyncStorage
+  const saveOrderToStorage = async (order) => {
+    try {
+      const existing = await AsyncStorage.getItem('openOrders');
+      const openOrders = existing ? JSON.parse(existing) : [];
+      openOrders.push(order);
+      await AsyncStorage.setItem('openOrders', JSON.stringify(openOrders));
+      console.log('Order saved to AsyncStorage:', order);
+      console.log('Current openOrders:', openOrders);
+    } catch (err) {
+      console.error('Failed to save order:', err);
+    }
+  };
+
+  const handleOrderConfirm = async () => {
     if (orderDetails) {
       const confirmedOrder = {
         ...orderDetails,
         status: 'open',
-        timestamp: new Date().toISOString() // <-- convert to string
+        timestamp: new Date()
       };
       setOrders(prevOrders => [...prevOrders, confirmedOrder]);
       setShowOrderModal(false);
       setShowConfirmationModal(true);
 
+      // Show "Order Opened" notification
       setOrderOpenedDetails(confirmedOrder);
       setShowOrderOpened(true);
 
+      // Hide notification after 3 seconds
       setTimeout(() => {
         setShowOrderOpened(false);
       }, 3000);
 
       setTimeout(() => {
         setShowConfirmationModal(false);
-        navigation.navigate('Home', { openOrders: [...orders, confirmedOrder] });
+        // Fix for timestamp serialization
+        const fixedOrders = orders.map(order => ({
+          ...order,
+          timestamp: typeof order.timestamp === 'string' ? order.timestamp : order.timestamp.toISOString(),
+        }));
+        navigation.navigate('Home', { openOrders: fixedOrders });
       }, 3000);
+
+      // Save the order to AsyncStorage
+      await saveOrderToStorage(confirmedOrder);
     }
   };
 
