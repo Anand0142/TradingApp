@@ -330,8 +330,8 @@ const headerOpacity = scrollY.interpolate({
         <Text style={styles.headerText}>Accounts</Text>
         <View style={styles.headerIconsContainer}>
           <View style={styles.topIcons}>
-            <TouchableOpacity style={[styles.iconButton,{fontWeight: 'bold'}]} onPress={() => setShowProfileMenu(!showProfileMenu)}>
-              <Icon name="alarm" size={24} color="black"  />
+            <TouchableOpacity style={[styles.iconButton,{fontWeight: 'bold'}]}>
+              <Icon name="alarm" size={24} color="black" />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.iconButton, {marginLeft: 15},{fontWeight: 'bold'}]}>
               <Icon name="bell-outline" size={24} color="black" />
@@ -549,7 +549,7 @@ const headerOpacity = scrollY.interpolate({
   style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
   onPress={() => setActiveTab('open')}
 >
-  <View style={{ flexDirection: 'row', alignItems: 'center',gap: 0 }}>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
     <Text style={[styles.tabText, activeTab === 'open' && styles.tabTextActive]}>
       Open
     </Text>
@@ -588,7 +588,7 @@ const headerOpacity = scrollY.interpolate({
 </TouchableOpacity>
       
       <TouchableOpacity style={styles.refreshButton}>
-        <RemixIcon name="arrow-up-down-line" size={22} color="#777" />
+        <RemixIcon name="arrow-up-down-line" size={20} color="#777" />
       </TouchableOpacity>
     </View>
     <View style={styles.bottomLine} />
@@ -1586,14 +1586,13 @@ const styles = StyleSheet.create({
   },
   tabs: {
   marginTop: 20,
-  marginBottom: 20,
   backgroundColor: '#f5f5f5', 
 },
 
 tabsRow: {
   flexDirection: 'row',
   justifyContent: 'space-between',
-  paddingHorizontal: 10,
+  paddingHorizontal: 15,
 },
 
 tabButton: {
@@ -1617,11 +1616,10 @@ tabTextActive: {
   fontWeight: '500',
 },
   refreshButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    padding:6,
   },
   bottomLine: {
   height: 2,
@@ -1892,19 +1890,19 @@ openCardSymbol: {
   marginRight: 8,
 },
 openCardCount: {
-  backgroundColor: '#7B8A97',
-  borderRadius: 18,
+  backgroundColor: '#ECECED',
+  borderRadius: 10,
   paddingHorizontal: 7,
   marginRight: 8,
-  marginLeft: 4,
+  marginLeft: 2,
   height: 22,
   justifyContent: 'center',
   alignItems: 'center',
   marginTop: 2,
 },
 openCardCountText: {
-  fontSize: 13,
-  color: '#fff',
+  fontSize: 15,
+  color: '#888',
   fontWeight: 'bold',
 },
 openCardPL: {
