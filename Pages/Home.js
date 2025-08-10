@@ -65,8 +65,15 @@ export default function Home(props) {
   const [activeTab, setActiveTab] = useState('open');
   const insets = useSafeAreaInsets();
   const [openOrders, setOpenOrders] = useState([]);
+  const pendingOrders = [];
+  const closedOrders = [];
   const [livePrices, setLivePrices] = useState({});
+  const [showOpenDetails, setShowOpenDetails] = useState(false);
   const scrollY = new Animated.Value(0);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showCloseNotification, setShowCloseNotification] = useState(false);
+  const [closeNotificationData, setCloseNotificationData] = useState(null);
 
 // Header will collapse from 150px to 50px
 
@@ -483,115 +490,416 @@ const headerOpacity = scrollY.interpolate({
           </View>
         </View>
 
-        {/* Tabs */}
-        <View style={styles.tabs}>
-          <View style={[styles.stickyTabs, { top: headerHeight }]}>
-            <View style={styles.tabsRow}>
-              <TouchableOpacity 
-                style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
-                onPress={() => setActiveTab('open')}
-              >
-                <Text style={[styles.tabText, activeTab === 'open' && styles.tabTextActive]}>Open</Text>
-              </TouchableOpacity>
+        {/* Tabs with counts */}
+<View style={styles.tabs}>
+  <View style={[styles.stickyTabs, { top: headerHeight }]}>
+    <View style={styles.tabsRow}>
 
-              <TouchableOpacity 
-                style={[styles.tabButton, activeTab === 'pending' && styles.tabButtonActive]}
-                onPress={() => setActiveTab('pending')}
-              >
-                <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>Pending</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.tabButton, activeTab === 'closed' && styles.tabButtonActive]}
-                onPress={() => setActiveTab('closed')}
-              >
-                <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>Closed</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.refreshButton}>
-                <RemixIcon name="arrow-up-down-line" size={20} color="#777" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.bottomLine} />
-          </View>
-        </View>
-    <View style={styles.container1}>
-      {/* Status text based on active tab */}
-      <Text style={styles.statusText1}>
-        {activeTab === 'open' && !hasOpenOrders && 'No open positions'}
-        {activeTab === 'pending' && 'No pending orders'}
-        {activeTab === 'closed' && 'No closed positions'}
-      </Text>
-
-      {/* Open Section: show orders if present, else default UI */}
-      {activeTab === 'open' && (
-        hasOpenOrders ? (
-          <View style={styles.openSectionCard}>
-            <View style={styles.openCardRow}>
-      <Image source={require('../assets/btc.png')} style={styles.openCardIcon} />
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={styles.openCardSymbol}>
-          {openOrders[0]?.symbol || 'BTC'}
-        </Text>
-        <View style={styles.openCardCount}>
-          <Text style={styles.openCardCountText}>
-            {openOrders.filter(o => o.symbol === openOrders[0]?.symbol).length}
-          </Text>
-        </View>
-        <Text style={[
-  styles.openCardPL,
-  { color: totalPL < 0 ? '#f00' : '#4CAF50' }
-]}>
-  {isNaN(totalPL) ? '0.00 USD' : (totalPL < 0 ? '' : '+') + totalPL.toFixed(2) + ' USD'}
-</Text>
-      </View>
+<TouchableOpacity 
+  style={[styles.tabButton, activeTab === 'open' && styles.tabButtonActive]}
+  onPress={() => setActiveTab('open')}
+>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <Text style={[styles.tabText, activeTab === 'open' && styles.tabTextActive]}>
+      Open
+    </Text>
+    <View style={[styles.openCardCount, { marginLeft: 4, height: 18, paddingHorizontal: 7, marginTop: 0 }]}>
+      <Text style={[styles.openCardCountText, { fontSize: 15 }]}>{safeOpenOrders.length}</Text>
     </View>
-    <Text style={styles.openCardDesc}>Fully hedged</Text>
-          </View>
+  </View>
+</TouchableOpacity>
+
+<TouchableOpacity 
+  style={[styles.tabButton, activeTab === 'pending' && styles.tabButtonActive]}
+  onPress={() => setActiveTab('pending')}
+>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <Text style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
+      Pending
+    </Text>
+    <View style={[styles.openCardCount, { marginLeft: 4, height: 18, paddingHorizontal: 7, marginTop: 0 }]}>
+      <Text style={[styles.openCardCountText, { fontSize: 15 }]}>{pendingOrders.length}</Text>
+    </View>
+  </View>
+</TouchableOpacity>
+
+<TouchableOpacity 
+  style={[styles.tabButton, activeTab === 'closed' && styles.tabButtonActive]}
+  onPress={() => setActiveTab('closed')}
+>
+  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+    <Text style={[styles.tabText, activeTab === 'closed' && styles.tabTextActive]}>
+      Closed
+    </Text>
+    <View style={[styles.openCardCount, { marginLeft: 4, height: 18, paddingHorizontal: 7, marginTop: 0 }]}>
+      <Text style={[styles.openCardCountText, { fontSize: 15 }]}>{closedOrders.length}</Text>
+    </View>
+  </View>
+</TouchableOpacity>
+      
+      <TouchableOpacity style={styles.refreshButton}>
+        <RemixIcon name="arrow-up-down-line" size={20} color="#777" />
+      </TouchableOpacity>
+    </View>
+    <View style={styles.bottomLine} />
+  </View>
+</View>
+
+{/* Open Section container - appears directly below Total P/L */}
+{activeTab === 'open' && hasOpenOrders && (
+  <View style={{
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 0,
+    marginBottom: 0,
+    width: '97%',
+    alignSelf: 'center'
+  }}>
+    <Text style={{ fontSize: 15, fontWeight: '550', color: '#222', marginLeft: 15, marginTop: 5 }}>
+      Total P/L
+    </Text>
+    <Text style={{
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: totalPL < 0 ? '#f00' : '#4CAF50',
+      marginRight: 10,
+      marginTop: 5,
+    }}>
+      {isNaN(totalPL) ? '0.00 USD' : (totalPL < 0 ? '' : '+') + totalPL.toFixed(2) + ' USD'}
+    </Text>
+  </View>
+)}
+<View style={[styles.container1, { marginTop: 0, paddingTop: 0 }]}>
+  {/* Status text based on active tab */}
+  <Text style={styles.statusText1}>
+    {activeTab === 'open' && !hasOpenOrders && 'No open positions'}
+    {activeTab === 'pending' && 'No pending orders'}
+    {activeTab === 'closed' && 'No closed positions'}
+  </Text>
+
+  {/* Open Section: show orders if present, else default UI */}
+  {activeTab === 'open' && (
+    hasOpenOrders ? (
+      <TouchableOpacity
+        style={styles.openSectionCard}
+        activeOpacity={0.95}
+        onPress={() => setShowOpenDetails(!showOpenDetails)}
+      >
+        {/* Top summary row - collapsed UI */}
+        {!showOpenDetails ? (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Image source={require('../assets/btc.png')} style={styles.openCardIcon} />
+                <Text style={styles.openCardSymbol}>{symbol}</Text>
+                <View style={[styles.openCardCount, { backgroundColor: '#ECECED', marginLeft: 6 }]}>
+                  <Text style={[styles.openCardCountText, { color: '#888' }]}>{symbolOrders.length}</Text>
+                </View>
+              </View>
+              <Text style={[
+                styles.openCardPL,
+                { color: totalPL < 0 ? '#f00' : '#4CAF50', marginLeft: 8 }
+              ]}>
+                {isNaN(totalPL) ? '0.00 USD' : (totalPL < 0 ? '' : '+') + totalPL.toFixed(2) + ' USD'}
+              </Text>
+            </View>
+            {/* Show "Fully hedged" ONLY before click */}
+            <Text style={{
+              fontSize: 15,
+              color: '#888',
+              marginTop: 2,
+              marginLeft: 44,
+              marginBottom: 10,
+              fontWeight: '500'
+            }}>
+              Fully hedged
+            </Text>
+          </>
         ) : (
           <>
-            {/* Default UI if no open orders */}
-            <View style={styles.tradeBox1}>
-              <View style={{ position: 'relative', width: moderateScale(30), height: moderateScale(30) }}>
-                <Image 
-                  source={require('../assets/eng.png')} 
-                  style={{
-                    width: moderateScale(24),
-                    height: moderateScale(24),
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    borderRadius: 12, 
-                    zIndex: 1
-                  }}
-                  resizeMode="cover"
-                />
-                <Image 
-                  source={require('../assets/usd.png')} 
-                  style={{
-                    width: moderateScale(24),
-                    height: moderateScale(24),
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    borderRadius: 12, 
-                    zIndex: 2
-                  }}
-                  resizeMode="cover"
-                />
+            {/* Expanded UI */}
+            <View style={styles.openCardRow}>
+              <Image source={require('../assets/btc.png')} style={styles.openCardIcon} />
+              <Text style={styles.openCardSymbol}>{symbol}</Text>
+              <View style={styles.openCardCount}>
+                <Text style={styles.openCardCountText}>{symbolOrders.length}</Text>
               </View>
-              <Text style={styles.tradeText1}>XAU/USD - Trade</Text>
+              <Text style={[
+                styles.openCardPL,
+                { color: totalPL < 0 ? '#f00' : '#4CAF50' }
+              ]}>
+                {isNaN(totalPL) ? '0.00 USD' : (totalPL < 0 ? '' : '+') + totalPL.toFixed(2) + ' USD'}
+              </Text>
             </View>
-            <View style={styles.explore1}>
-              <MaterialCommunityIcons name="magnify" size={18} color="#333" />
-              <Text style={styles.exploreText1}>Explore more instruments</Text>
-            </View>
-          </>
-        )
-      )}
+            {/* Gray divider line */}
+            <View style={{ height: 1, backgroundColor: '#ECECED', marginVertical: 8 }} />
+            {/* Details: show only if expanded */}
+            {symbolOrders.map((order, idx) => {
+              const qty = Number(order.quantity);
+              const entryPrice = Number(order.price);
+              const live = livePrices[symbol] || order.currentPrice || entryPrice;
+              const orderPL = order.type === 'SELL'
+                ? (entryPrice - live) * qty
+                : (live - entryPrice) * qty;
+              return (
+                <View key={order.id || idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#222', marginLeft: 8 }}>{order.symbol}</Text>
+                    <Text style={{
+                      color: order.type === 'BUY' ? '#007bff' : '#f00',
+                      fontWeight: 'bold',
+                      fontSize: 15,
+                      marginTop: 2,
+                      marginLeft: 8
+                    }}>
+                      {order.type === 'BUY' ? 'Buy' : 'Sell'} {order.quantity} lot at <Text style={{ color: '#222' }}>{Number(order.price).toFixed(2)}</Text>
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{
+                      fontSize: 16,
+                      fontWeight: 'bold',
+                      color: orderPL < 0 ? '#f00' : '#4CAF50'
+                    }}>
+                      {orderPL < 0 ? '' : '+'}{orderPL.toFixed(2)} USD
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#888', marginTop: 2 }}>
+                      {live.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+            {showOpenDetails && (
+  <TouchableOpacity
+    style={{
+      backgroundColor: '#ececedb5',
+      borderRadius: 8,
+      paddingVertical: 10,
+      alignItems: 'center',
+      marginTop: 8,
+      marginBottom: 2,
+      width: '98%',
+      alignSelf: 'center',
+    }}
+    activeOpacity={0.8}
+    onPress={() => {
+      setSelectedOrder(symbolOrders[0]); // or let user pick which order to close
+      setShowCloseModal(true);
+    }}
+  >
+     <Text style={{ color: '#222', fontWeight: 'bold', fontSize: 15 }}>
+      Close Order
+    </Text>
+  </TouchableOpacity>
+)}
+<Modal
+  visible={showCloseModal}
+  animationType="slide"
+  transparent={true}
+  onRequestClose={() => setShowCloseModal(false)}
+>
+  <TouchableWithoutFeedback onPress={() => setShowCloseModal(false)}>
+    <View style={styles.modalOverlay} />
+  </TouchableWithoutFeedback>
+  <View style={{
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 8,
+  }}>
+    <View style={{
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: '#ECECED',
+      marginBottom: 16,
+      alignSelf: 'center'
+    }} />
+    <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>
+      Close position #{selectedOrder?.id}
+    </Text>
+    <View style={{ width: '100%', marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+        <Text style={{ color: '#888', fontSize: 15 }}>Lots</Text>
+        <Text style={{ color: '#222', fontSize: 15 }}>{selectedOrder?.quantity}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+        <Text style={{ color: '#888', fontSize: 15 }}>Closing price</Text>
+        <Text style={{ color: '#222', fontSize: 15 }}>{livePrice.toFixed(2)}</Text>
+      </View>
+      {/* Profit/Loss label logic */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+        <Text style={{ color: '#888', fontSize: 15 }}>
+          {selectedOrder && (
+            ((selectedOrder.type === 'SELL'
+              ? (Number(selectedOrder.price) - livePrice) * Number(selectedOrder.quantity)
+              : (livePrice - Number(selectedOrder.price)) * Number(selectedOrder.quantity)
+            ) < 0 ? 'Loss' : 'Profit')
+          )}
+        </Text>
+        <Text style={{
+          color: selectedOrder && (
+            ((selectedOrder.type === 'SELL'
+              ? (Number(selectedOrder.price) - livePrice) * Number(selectedOrder.quantity)
+              : (livePrice - Number(selectedOrder.price)) * Number(selectedOrder.quantity)
+            ) < 0) ? '#f00' : '#4CAF50'
+          ),
+          fontSize: 15,
+          fontWeight: 'bold'
+        }}>
+          {selectedOrder
+            ? ((selectedOrder.type === 'SELL'
+                ? (Number(selectedOrder.price) - livePrice) * Number(selectedOrder.quantity)
+                : (livePrice - Number(selectedOrder.price)) * Number(selectedOrder.quantity)
+              ).toFixed(2) + ' USD')
+            : ''}
+        </Text>
+      </View>
     </View>
+    <TouchableOpacity
+      style={{
+        backgroundColor: '#FFD700',
+        borderRadius: 8,
+        paddingVertical: 10,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 8
+      }}
+      onPress={async () => {
+        // Remove order from AsyncStorage
+        const updatedOrders = openOrders.filter(o => o.id !== selectedOrder.id);
+        await AsyncStorage.setItem('openOrders', JSON.stringify(updatedOrders));
+        setOpenOrders(updatedOrders);
+        setHasOpenOrders(updatedOrders.length > 0);
+
+        // Prepare notification data
+        const qty = Number(selectedOrder.quantity);
+        const entryPrice = Number(selectedOrder.price);
+        const pl = selectedOrder.type === 'SELL'
+          ? (entryPrice - livePrice) * qty
+          : (livePrice - entryPrice) * qty;
+        setCloseNotificationData({
+          symbol: selectedOrder.symbol,
+          type: selectedOrder.type,
+          quantity: selectedOrder.quantity,
+          pl,
+        });
+        setShowCloseNotification(true);
+
+        setShowCloseModal(false);
+
+        // Hide notification after 2.5 seconds
+        setTimeout(() => setCloseNotificationData(null), 2500);
+      }}
+    >
+      <Text style={{ color: '#222', fontWeight: 'bold', fontSize: 16 }}>Confirm</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      style={{
+        backgroundColor: '#ececed',
+        borderRadius: 8,
+        paddingVertical: 10,
+        width: '100%',
+        alignItems: 'center'
+      }}
+      onPress={() => setShowCloseModal(false)}
+    >
+      <Text style={{ color: '#222', fontWeight: 'bold', fontSize: 16 }}>Cancel</Text>
+    </TouchableOpacity>
+  </View>
+</Modal> 
+          </>
+        )}
+      </TouchableOpacity>
+
+    ) : (
+      // Default UI if no open orders
+      <View style={styles.tradeBox1}>
+      <View style={{ position: 'relative', width: moderateScale(30), height: moderateScale(30) ,paddingTop: 10}}>
+        <Image 
+          source={require('../assets/eng.png')} 
+          style={{
+             width: moderateScale(24),
+            height: moderateScale(24),
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            borderRadius: 12, 
+            zIndex: 1
+          }}
+          resizeMode="cover"
+        />
+        <Image 
+          source={require('../assets/usd.png')} 
+          style={{
+            width: moderateScale(24),
+            height: moderateScale(24),
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            borderRadius: 12, 
+            zIndex: 2
+          }}
+          resizeMode="cover"
+        />
+      </View>
+      <Text style={styles.tradeText1}>XAU/USD - Trade</Text>
+    </View>
+    )
+  )}
+</View>
     </ScrollView>
+
+    {showCloseNotification && closeNotificationData && (
+  <View style={{
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: insets.bottom + verticalScale(65), 
+    marginHorizontal: 12,
+    backgroundColor: '#F7F8FA',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ECECED',
+    padding: 16,
+    zIndex: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 4,
+  }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#222' }}>Order closed</Text>
+      <TouchableOpacity onPress={() => setShowCloseNotification(false)}>
+        <Text style={{ fontSize: 18, color: '#888', fontWeight: 'bold' }}>×</Text>
+      </TouchableOpacity>
+    </View>
+    <Text style={{ fontSize: 15, color: '#222', marginTop: 4 }}>
+      {closeNotificationData.symbol} {closeNotificationData.type} {closeNotificationData.quantity} lots.
+    </Text>
+    <Text style={{
+      fontSize: 15,
+      color: closeNotificationData.pl < 0 ? '#f00' : '#4CAF50',
+      marginTop: 4,
+      fontWeight: 'bold'
+    }}>
+      {closeNotificationData.pl < 0 ? 'Loss' : 'Profit'}: {closeNotificationData.pl.toFixed(2)} USD
+    </Text>
+  </View>
+)}
 
       {/* Footer */}
       <View style={[styles.footer,{ paddingBottom: insets.bottom }]}>
@@ -1360,7 +1668,6 @@ tabTextActive: {
     padding: moderateScale(16),
     backgroundColor: '#F4F4F4',
     alignItems: 'center',
-    marginTop: verticalScale(15),
   },
   statusText1: {
     fontSize: 16,
@@ -1379,6 +1686,8 @@ tabTextActive: {
     height: verticalScale(50),  
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: moderateScale(10),
+    paddingBottom: moderateScale(10),
   },
   iconContainer1: {
     flexDirection: 'row',
